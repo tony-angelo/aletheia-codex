@@ -22,20 +22,35 @@ try {
     Write-Host "Original length: $($password.Length)" -ForegroundColor Gray
     Write-Host "Cleaned length: $($cleanPassword.Length)" -ForegroundColor Gray
     
-    if ($password -ne $cleanPassword) {
-        Write-Host "Password contains whitespace! Fixing..." -ForegroundColor Red
+    # If original is suspiciously short (< 10 chars) or different from cleaned, update it
+    if ($password.Length -lt 10 -or $password -ne $cleanPassword) {
+        Write-Host "Password needs fixing! (too short or contains whitespace)" -ForegroundColor Red
         
-        # Create new version with cleaned password
-        Write-Host "Creating new secret version..." -ForegroundColor Yellow
-        echo $cleanPassword | gcloud secrets versions add NEO4J_PASSWORD --data-file=- --project=$PROJECT_ID
+        # Get the actual password from Neo4j AuraDB
+        Write-Host ""
+        Write-Host "IMPORTANT: The current password in Secret Manager appears corrupted." -ForegroundColor Yellow
+        Write-Host "Please enter the correct Neo4j password from your AuraDB console:" -ForegroundColor Yellow
+        $correctPassword = Read-Host -AsSecureString "Neo4j Password"
+        $BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($correctPassword)
+        $plainPassword = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)
         
-        Write-Host "✓ Password cleaned and updated!" -ForegroundColor Green
-        Write-Host "  New password length: $($cleanPassword.Length)" -ForegroundColor Green
+        # Clean it
+        $cleanedCorrectPassword = Clean-SecretValue $plainPassword
+        
+        Write-Host ""
+        Write-Host "Creating new secret version with correct password..." -ForegroundColor Yellow
+        Write-Host "New password length: $($cleanedCorrectPassword.Length)" -ForegroundColor Gray
+        
+        # Create new version
+        echo $cleanedCorrectPassword | gcloud secrets versions add NEO4J_PASSWORD --data-file=- --project=$PROJECT_ID
+        
+        Write-Host "✓ Password updated successfully!" -ForegroundColor Green
+        Write-Host "  Password length: $($cleanedCorrectPassword.Length)" -ForegroundColor Green
     } else {
-        Write-Host "✓ Password is clean (no whitespace detected)" -ForegroundColor Green
+        Write-Host "✓ Password appears correct (length: $($password.Length))" -ForegroundColor Green
     }
 } catch {
-    Write-Host "✗ Error checking password: $($_.Exception.Message)" -ForegroundColor Red
+    Write-Host "✗ Error: $($_.Exception.Message)" -ForegroundColor Red
     Write-Host "  Try manually updating the secret in Cloud Console" -ForegroundColor Yellow
 }
 
