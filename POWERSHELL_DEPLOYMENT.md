@@ -21,6 +21,9 @@
 
 # After installation, verify
 gcloud version
+
+# Verify service account exists
+gcloud iam service-accounts list --filter="email:aletheia-functions@aletheia-codex-prod.iam.gserviceaccount.com"
 ```
 
 ### PowerShell Execution Policy
@@ -460,6 +463,47 @@ Invoke-RestMethod -Uri "https://us-central1-aletheia-codex-prod.cloudfunctions.n
 
 # Monitor logs (Ctrl+C to stop)
 while ($true) { Clear-Host; gcloud functions logs read orchestrate --region=us-central1 --limit=10; Start-Sleep 30 }
+```
+
+---
+
+## 💡 PowerShell Command Equivalents
+
+### Linux to PowerShell Command Translation
+
+For users familiar with Linux/bash commands, here are PowerShell equivalents:
+
+| Linux Command | PowerShell Equivalent | Example |
+|---------------|----------------------|---------|
+| `grep` | `Select-String` or `--filter` | `gcloud ... --filter="email:name@domain.com"` |
+| `cat` | `Get-Content` | `Get-Content file.txt` |
+| `ls` | `Get-ChildItem` or `dir` | `Get-ChildItem -Recurse` |
+| `cp` | `Copy-Item` | `Copy-Item source dest -Recurse` |
+| `mv` | `Move-Item` | `Move-Item source dest` |
+| `rm` | `Remove-Item` | `Remove-Item -Recurse -Force` |
+| `mkdir` | `New-Item -ItemType Directory` | `New-Item -ItemType Directory -Path folder` |
+| `touch` | `New-Item -ItemType File` | `New-Item -ItemType File -Path file.txt` |
+| `echo` | `Write-Host` or `Write-Output` | `Write-Host "message"` |
+| `pwd` | `Get-Location` or `pwd` | `Get-Location` |
+| `cd` | `Set-Location` or `cd` | `Set-Location C:\path` |
+| `find` | `Get-ChildItem -Recurse` | `Get-ChildItem -Recurse -Filter "*.py"` |
+| `head` | `Get-Content -Head` | `Get-Content file.txt -Head 10` |
+| `tail` | `Get-Content -Tail` | `Get-Content file.txt -Tail 10` |
+| `wc -l` | `Measure-Object -Line` | `Get-Content file.txt | Measure-Object -Line` |
+| `>` | `Out-File` or `>` | `command | Out-File file.txt` |
+| `>>` | `Out-File -Append` or `>>` | `command | Out-File file.txt -Append` |
+| `|` (pipe) | `|` (pipe) | `command1 | command2` |
+
+### gcloud Filtering (Instead of grep)
+```powershell
+# Instead of: gcloud ... | grep pattern
+# Use gcloud's built-in filtering:
+gcloud iam service-accounts list --filter="email:aletheia-functions*"
+gcloud functions list --filter="name:orchestrate"
+gcloud projects list --filter="projectId:aletheia-codex*"
+
+# Or use PowerShell's Select-String:
+gcloud iam service-accounts list | Select-String "aletheia-functions"
 ```
 
 ---

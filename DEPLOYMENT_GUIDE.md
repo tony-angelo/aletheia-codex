@@ -54,7 +54,7 @@ gcloud config get-value project
 gcloud config set project aletheia-codex-prod
 
 # Verify service account exists
-gcloud iam service-accounts list | grep aletheia-functions
+gcloud iam service-accounts list --filter="email:aletheia-functions@aletheia-codex-prod.iam.gserviceaccount.com"
 ```
 
 ### Step 2: Pull Latest Code
