@@ -90,8 +90,13 @@ Write-Host "=== Deployment Summary ===" -ForegroundColor Cyan
 Write-Host ""
 
 foreach ($func in $results.Keys) {
-    $status = if ($results[$func]) { "✓ SUCCESS" } else { "✗ FAILED" }
-    $color = if ($results[$func]) { "Green" } else { "Red" }
+    if ($results[$func]) {
+        $status = "SUCCESS"
+        $color = "Green"
+    } else {
+        $status = "FAILED"
+        $color = "Red"
+    }
     Write-Host "$func : $status" -ForegroundColor $color
 }
 
