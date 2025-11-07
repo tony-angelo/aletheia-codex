@@ -53,7 +53,7 @@ Write-Host "[5/5] Deploying to Cloud Functions..." -ForegroundColor Yellow
 Write-Host "Running deployment script..." -ForegroundColor Yellow
 
 if (Test-Path "infrastructure/deploy-function.ps1") {
-    & "infrastructure/deploy-function.ps1"
+    & "infrastructure/deploy-function.ps1" -FunctionName "orchestrate" -FunctionDir "functions/orchestration" -EntryPoint "orchestrate"
     Write-Host "Deployed to Cloud Functions" -ForegroundColor Green
 } else {
     Write-Host "Deployment script not found. Please deploy manually:" -ForegroundColor Yellow
