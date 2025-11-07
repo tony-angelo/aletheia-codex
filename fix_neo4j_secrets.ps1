@@ -26,14 +26,17 @@ try {
         Write-Host "Password contains whitespace! Fixing..." -ForegroundColor Red
         
         # Create new version with cleaned password
-        $cleanPassword | gcloud secrets versions add NEO4J_PASSWORD --data-file=- --project=$PROJECT_ID
+        Write-Host "Creating new secret version..." -ForegroundColor Yellow
+        echo $cleanPassword | gcloud secrets versions add NEO4J_PASSWORD --data-file=- --project=$PROJECT_ID
         
         Write-Host "✓ Password cleaned and updated!" -ForegroundColor Green
+        Write-Host "  New password length: $($cleanPassword.Length)" -ForegroundColor Green
     } else {
-        Write-Host "✓ Password is clean" -ForegroundColor Green
+        Write-Host "✓ Password is clean (no whitespace detected)" -ForegroundColor Green
     }
 } catch {
     Write-Host "✗ Error checking password: $($_.Exception.Message)" -ForegroundColor Red
+    Write-Host "  Try manually updating the secret in Cloud Console" -ForegroundColor Yellow
 }
 
 Write-Host ""
