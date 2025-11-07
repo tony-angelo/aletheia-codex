@@ -10,7 +10,7 @@ import os
 import json
 
 from shared.db.firestore_client import get_firestore_client
-from shared.db.neo4j_client import get_neo4j_driver, execute_query
+from shared.db.neo4j_client import get_neo4j_driver
 from shared.ai.gemini_client import generate_embeddings
 from shared.utils.logging import get_logger
 from shared.utils.text_chunker import chunk_text
@@ -26,12 +26,13 @@ def orchestrate(request: Request):
     """
     Process a document: fetch, chunk, embed, and store in Neo4j.
     
-    Expected JSON payload from Cloud Tasks:
+    Expected JSON payload:
     {
         "document_id": "firestore-doc-id",
         "action": "process_document"
     }
     """
+    document_id = None
     try:
         data = request.get_json(silent=True)
         if not data:
@@ -73,10 +74,10 @@ def orchestrate(request: Request):
             # Create document node
             session.run(
                 """
-                MERGE (d:Document {id: \})
-                SET d.title = \,
+                MERGE (d:Document {id: $doc_id})
+                SET d.title = $title,
                     d.created_at = datetime(),
-                    d.chunk_count = \
+                    d.chunk_count = $chunk_count
                 """,
                 doc_id=document_id,
                 title=title,
@@ -85,28 +86,28 @@ def orchestrate(request: Request):
             
             # Process each chunk
             for idx, chunk in enumerate(chunks):
-                chunk_text = chunk['text']
+                text = chunk['text']
                 
                 # Generate embedding
-                embedding = generate_embeddings(chunk_text)
+                embedding = generate_embeddings(text)
                 logger.info(f"Generated embedding for chunk {idx + 1}/{len(chunks)}")
                 
                 # Store chunk and embedding in Neo4j
                 session.run(
                     """
-                    MATCH (d:Document {id: \})
+                    MATCH (d:Document {id: $doc_id})
                     CREATE (c:Chunk {
-                        id: \,
-                        text: \,
-                        position: \,
-                        length: \,
-                        embedding: \
+                        id: $chunk_id,
+                        text: $text,
+                        position: $position,
+                        length: $length,
+                        embedding: $embedding
                     })
-                    CREATE (d)-[:HAS_CHUNK {position: \}]->(c)
+                    CREATE (d)-[:HAS_CHUNK {position: $position}]->(c)
                     """,
                     doc_id=document_id,
                     chunk_id=f"{document_id}_chunk_{idx}",
-                    text=chunk_text,
+                    text=text,
                     position=idx,
                     length=chunk['length'],
                     embedding=embedding
@@ -131,14 +132,14 @@ def orchestrate(request: Request):
         logger.error(f"Error processing document: {str(e)}")
         
         # Update status to failed
-        if 'document_id' in locals():
+        if document_id:
             try:
                 db = get_firestore_client(PROJECT_ID)
                 db.collection("documents").document(document_id).update({
                     "status": "failed",
                     "error": str(e)
                 })
-            except:
-                pass
+            except Exception as update_error:
+                logger.error(f"Failed to update document status: {str(update_error)}")
         
         return jsonify({"error": f"Processing failed: {str(e)}"}), 500

@@ -1,11 +1,10 @@
-﻿# AletheiaCodex .gitignore
+﻿[Your existing content above "# Cloud integration secrets" goes here]
 
-# Credentials and secrets
-infrastructure/neo4j-credentials.txt
-infrastructure/gemini-api-key.txt
+# Cloud integration secrets
+.env.google
+credentials.json
 *.key
-*.pem
-*.json.secret
+service-account-key.json
 
 # Python
 __pycache__/
@@ -13,9 +12,6 @@ __pycache__/
 *.class
 *.so
 .Python
-env/
-venv/
-ENV/
 build/
 develop-eggs/
 dist/
@@ -32,29 +28,140 @@ wheels/
 .installed.cfg
 *.egg
 
+# Virtual environments
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
 # IDEs
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
+.project
+.pydevproject
 
 # OS
 .DS_Store
 Thumbs.db
-
-# Firebase
-.firebase/
-firebase-debug.log
-firestore-debug.log
-ui-debug.log
-
-# Node (if using Firebase CLI)
-node_modules/
+desktop.ini
 
 # Logs
 *.log
+logs/
 
-# Environment variables
-.env
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+
+# Documentation build
+docs/_build/
+site/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# pyenv
+.python-version
+
+# pipenv
+Pipfile.lock
+
+# PEP 582
+__pypackages__/
+
+# Celery
+celerybeat-schedule
+celerybeat.pid
+
+# SageMath parsed files
+*.sage.py
+
+# Spyder
+.spyderproject
+.spyproject
+
+# Rope
+.ropeproject
+
+# mkdocs
+/site
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre
+.pyre/
+
+# Flutter/Dart (if you have FlutterFlow integration)
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+/build/
+/fvm/
+
+# Android (if any mobile components)
+*.apk
+*.ap_
+*.dex
+*.class
+bin/
+gen/
+out/
+/build/
+
+# iOS (if any mobile components)
+*.ipa
+*.dSYM.zip
+*.dSYM
+DerivedData/
+*.pbxuser
+!default.pbxuser
+*.mode1v3
+!default.mode1v3
+*.mode2v3
+!default.mode2v3
+*.perspectivev3
+!default.perspectivev3
+xcuserdata/
+*.xccheckout
+*.moved-aside
+DerivedData/
+*.hmap
+*.ipa
+*.xcuserstate
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.backup
+
+# Local configuration files
+local_settings.py
 .env.local
+.env.development
+.env.test
+.env.production
+
+# Database (if any local ones)
+*.db
+*.sqlite
+*.sqlite3
+
+# Node.js (if any frontend build tools)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
