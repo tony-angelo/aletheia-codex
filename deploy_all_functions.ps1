@@ -55,13 +55,13 @@ function Deploy-CloudFunction {
         # Clean up
         Remove-Item -Recurse -Force $deployDir
         
-        Write-Host "[$Name] ✓ Deployed successfully!" -ForegroundColor Green
+        Write-Host "[$Name] Deployed successfully!" -ForegroundColor Green
         Write-Host ""
         
         return $true
     }
     catch {
-        Write-Host "[$Name] ✗ Deployment failed: $($_.Exception.Message)" -ForegroundColor Red
+        Write-Host "[$Name] Deployment failed: $($_.Exception.Message)" -ForegroundColor Red
         Set-Location ..
         if (Test-Path $deployDir) {
             Remove-Item -Recurse -Force $deployDir
