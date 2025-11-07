@@ -63,7 +63,8 @@ def get_secret(project_id: str, secret_id: str, version: str = "latest", use_cac
         logger.info(f"Retrieving secret: {secret_id}")
         
         response = client.access_secret_version(request={"name": name})
-        secret_value = response.payload.data.decode("UTF-8").strip()
+        # Decode and strip ALL whitespace including newlines, tabs, etc.
+        secret_value = response.payload.data.decode("UTF-8").strip().replace('\n', '').replace('\r', '').replace('\t', '')
         
         # Cache the secret
         if use_cache:
