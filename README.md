@@ -73,22 +73,22 @@ Document Upload → Ingestion Function → Cloud Storage
 ### Quick Start
 
 1. **Clone Repository**
-   ```bash
+   ```powershell
    git clone https://github.com/tony-angelo/aletheia-codex.git
    cd aletheia-codex
    ```
 
 2. **Deploy Functions**
-   ```bash
+   ```powershell
    # Deploy orchestration function
-   ./infrastructure/deploy-function.ps1 \
-     -FunctionName orchestrate \
-     -FunctionDir functions/orchestration \
+   .\infrastructure\deploy-function.ps1 `
+     -FunctionName orchestrate `
+     -FunctionDir functions/orchestration `
      -EntryPoint orchestrate
    ```
 
 3. **Verify Deployment**
-   ```bash
+   ```powershell
    gcloud functions describe orchestrate --region=us-central1
    ```
 
@@ -160,7 +160,7 @@ Response:
 ## 🧪 Testing
 
 ### Run Test Suite
-```bash
+```powershell
 python test_improvements.py
 ```
 
@@ -236,7 +236,7 @@ aletheia-codex/
 ## 🔍 Monitoring
 
 ### View Logs
-```bash
+```powershell
 # Recent logs
 gcloud functions logs read orchestrate --region=us-central1 --limit=50
 
@@ -244,7 +244,7 @@ gcloud functions logs read orchestrate --region=us-central1 --limit=50
 gcloud functions logs read orchestrate --region=us-central1 --limit=50 --format="table(time_utc,log)"
 
 # Export logs
-gcloud functions logs read orchestrate --region=us-central1 --limit=500 --format=json > logs.json
+gcloud functions logs read orchestrate --region=us-central1 --limit=500 --format=json | Out-File -FilePath "logs.json" -Encoding UTF8
 ```
 
 ### Cloud Console
@@ -285,11 +285,11 @@ gcloud functions logs read orchestrate --region=us-central1 --limit=500 --format
 
 If issues occur after deployment:
 
-```bash
+```powershell
 # Restore original files
-cp functions/orchestration/main_backup.py functions/orchestration/main.py
-cp shared/db/neo4j_client_backup.py shared/db/neo4j_client.py
-cp shared/utils/logging_backup.py shared/utils/logging.py
+Copy-Item "functions\orchestration\main_backup.py" "functions\orchestration\main.py" -Force
+Copy-Item "shared\db\neo4j_client_backup.py" "shared\db\neo4j_client.py" -Force
+Copy-Item "shared\utils\logging_backup.py" "shared\utils\logging.py" -Force
 
 # Commit and redeploy
 git add -A
@@ -297,14 +297,20 @@ git commit -m "Rollback: Restore original implementations"
 git push origin main
 
 # Redeploy function
-gcloud functions deploy orchestrate \
-  --gen2 \
-  --runtime=python311 \
-  --region=us-central1 \
-  --source=functions/orchestration \
-  --entry-point=orchestrate \
-  --trigger-http \
+New-Item -ItemType Directory -Path deploy-temp -Force
+Copy-Item -Path "functions\orchestration\*" -Destination "deploy-temp" -Recurse
+Copy-Item -Path "shared" -Destination "deploy-temp" -Recurse
+Set-Location deploy-temp
+gcloud functions deploy orchestrate `
+  --gen2 `
+  --runtime=python311 `
+  --region=us-central1 `
+  --source=. `
+  --entry-point=orchestrate `
+  --trigger-http `
   --service-account=aletheia-functions@aletheia-codex-prod.iam.gserviceaccount.com
+Set-Location ..
+Remove-Item -Recurse -Force deploy-temp
 ```
 
 ---

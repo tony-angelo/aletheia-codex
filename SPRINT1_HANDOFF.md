@@ -140,49 +140,57 @@ aletheia-codex/
 ### Deployment Steps
 
 **Step 1: Pull Latest Code**
-```bash
-cd /path/to/aletheia-codex
+```powershell
+cd C:\dev\aletheia-codex
 git pull origin main
 ```
 
 **Step 2: Deploy Function**
-```bash
+```powershell
 # Create deployment directory
-mkdir -p deploy-temp
-cp -r functions/orchestration/* deploy-temp/
-cp -r shared deploy-temp/
+New-Item -ItemType Directory -Path deploy-temp -Force
+Copy-Item -Path "functions\orchestration\*" -Destination "deploy-temp" -Recurse
+Copy-Item -Path "shared" -Destination "deploy-temp" -Recurse
 
 # Deploy
-cd deploy-temp
-gcloud functions deploy orchestrate \
-  --gen2 \
-  --runtime=python311 \
-  --region=us-central1 \
-  --source=. \
-  --entry-point=orchestrate \
-  --trigger-http \
-  --service-account=aletheia-functions@aletheia-codex-prod.iam.gserviceaccount.com \
-  --timeout=540s \
-  --memory=512MB \
+Set-Location deploy-temp
+gcloud functions deploy orchestrate `
+  --gen2 `
+  --runtime=python311 `
+  --region=us-central1 `
+  --source=. `
+  --entry-point=orchestrate `
+  --trigger-http `
+  --service-account=aletheia-functions@aletheia-codex-prod.iam.gserviceaccount.com `
+  --timeout=540s `
+  --memory=512MB `
   --set-env-vars=GCP_PROJECT=aletheia-codex-prod
 
 # Clean up
-cd ..
-rm -rf deploy-temp
+Set-Location ..
+Remove-Item -Recurse -Force deploy-temp
 ```
 
 **Step 3: Verify Deployment**
-```bash
+```powershell
 # Check status
 gcloud functions describe orchestrate --region=us-central1
 
 # Test function
-TOKEN=$(gcloud auth print-identity-token)
-curl -X POST \
-  https://us-central1-aletheia-codex-prod.cloudfunctions.net/orchestrate \
-  -H "Authorization: Bearer $TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{"document_id": "test", "action": "process_document"}'
+$TOKEN = gcloud auth print-identity-token
+$headers = @{
+    "Authorization" = "Bearer $TOKEN"
+    "Content-Type" = "application/json"
+}
+$body = @{
+    "document_id" = "test"
+    "action" = "process_document"
+} | ConvertTo-Json
+
+Invoke-RestMethod -Uri "https://us-central1-aletheia-codex-prod.cloudfunctions.net/orchestrate" `
+    -Method POST `
+    -Headers $headers `
+    -Body $body
 
 # Check logs
 gcloud functions logs read orchestrate --region=us-central1 --limit=50
@@ -223,12 +231,12 @@ Look for these in Cloud Functions logs:
 
 If critical issues occur:
 
-```bash
+```powershell
 # 1. Restore original files
-cd aletheia-codex
-cp functions/orchestration/main_backup.py functions/orchestration/main.py
-cp shared/db/neo4j_client_backup.py shared/db/neo4j_client.py
-cp shared/utils/logging_backup.py shared/utils/logging.py
+cd C:\dev\aletheia-codex
+Copy-Item "functions\orchestration\main_backup.py" "functions\orchestration\main.py" -Force
+Copy-Item "shared\db\neo4j_client_backup.py" "shared\db\neo4j_client.py" -Force
+Copy-Item "shared\utils\logging_backup.py" "shared\utils\logging.py" -Force
 
 # 2. Commit and push
 git add -A
@@ -236,20 +244,20 @@ git commit -m "Rollback: Restore original implementations"
 git push origin main
 
 # 3. Redeploy
-mkdir -p deploy-temp
-cp -r functions/orchestration/* deploy-temp/
-cp -r shared deploy-temp/
-cd deploy-temp
-gcloud functions deploy orchestrate \
-  --gen2 \
-  --runtime=python311 \
-  --region=us-central1 \
-  --source=. \
-  --entry-point=orchestrate \
-  --trigger-http \
+New-Item -ItemType Directory -Path deploy-temp -Force
+Copy-Item -Path "functions\orchestration\*" -Destination "deploy-temp" -Recurse
+Copy-Item -Path "shared" -Destination "deploy-temp" -Recurse
+Set-Location deploy-temp
+gcloud functions deploy orchestrate `
+  --gen2 `
+  --runtime=python311 `
+  --region=us-central1 `
+  --source=. `
+  --entry-point=orchestrate `
+  --trigger-http `
   --service-account=aletheia-functions@aletheia-codex-prod.iam.gserviceaccount.com
-cd ..
-rm -rf deploy-temp
+Set-Location ..
+Remove-Item -Recurse -Force deploy-temp
 ```
 
 ---
@@ -269,18 +277,28 @@ rm -rf deploy-temp
 - Monitor costs
 
 ### Monitoring Commands
-```bash
+```powershell
 # View recent logs
 gcloud functions logs read orchestrate --region=us-central1 --limit=50
 
 # Follow logs in real-time
-watch -n 30 'gcloud functions logs read orchestrate --region=us-central1 --limit=10'
+while ($true) {
+    Clear-Host
+    Write-Host "=== Latest Logs (updated every 30 seconds) ===" -ForegroundColor Green
+    Write-Host "Last updated: $(Get-Date)" -ForegroundColor Gray
+    Write-Host ""
+    gcloud functions logs read orchestrate --region=us-central1 --limit=10 --format="table(time,textPayload)"
+    Write-Host ""
+    Write-Host "Next update in 30 seconds... Press Ctrl+C to stop" -ForegroundColor Yellow
+    Start-Sleep -Seconds 30
+}
 
 # Export logs for analysis
-gcloud functions logs read orchestrate \
-  --region=us-central1 \
-  --limit=500 \
-  --format=json > logs-$(date +%Y%m%d).json
+$timestamp = Get-Date -Format "yyyyMMdd"
+gcloud functions logs read orchestrate `
+  --region=us-central1 `
+  --limit=500 `
+  --format=json | Out-File -FilePath "logs-$timestamp.json" -Encoding UTF8
 ```
 
 ---
