@@ -30,7 +30,7 @@ def get_secret(project_id: str, secret_id: str, version: str = "latest") -> str:
         name = f"projects/{project_id}/secrets/{secret_id}/versions/{version}"
         logger.info(f"Retrieving secret: {secret_id}")
         response = client.access_secret_version(request={"name": name})
-        secret_value = response.payload.data.decode("UTF-8")
+        secret_value = response.payload.data.decode("UTF-8").strip()
         logger.info(f"Successfully retrieved secret: {secret_id} (length: {len(secret_value)})")
         return secret_value
     except Exception as e:
@@ -51,7 +51,7 @@ def create_neo4j_driver(project_id: str = "aletheia-codex-prod") -> Driver:
         Initialized Neo4j driver
     """
     try:
-        logger.info("Creating new Neo4j driver...")
+        print("=== FIXED CODE IS RUNNING ==="); print("=== CREATING NEW NEO4J DRIVER ===")
         
         # Retrieve credentials
         uri = get_secret(project_id, "NEO4J_URI")

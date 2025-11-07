@@ -1,4 +1,4 @@
-﻿"""
+"""
 AletheiaCodex - Orchestration Function
 Processes documents: chunking, embedding, and knowledge graph storage.
 """
@@ -10,7 +10,7 @@ import os
 import json
 
 from shared.db.firestore_client import get_firestore_client
-from shared.db.neo4j_client import get_neo4j_driver
+from shared.db.neo4j_client_fixed import get_neo4j_driver
 from shared.ai.gemini_client import generate_embeddings
 from shared.utils.logging import get_logger
 from shared.utils.text_chunker import chunk_text
@@ -68,7 +68,7 @@ def orchestrate(request: Request):
         logger.info(f"Created {len(chunks)} chunks")
         
         # Process each chunk
-        driver = get_neo4j_driver(PROJECT_ID)
+        print("=== DEBUG: ABOUT TO CALL NEO4J DRIVER ==="); driver = get_neo4j_driver(PROJECT_ID)
         
         with driver.session() as session:
             # Create document node
