@@ -35,7 +35,7 @@ Write-Host "Deploying function..." -ForegroundColor Cyan
 # Deploy (without --allow-unauthenticated to avoid org policy issues)
 gcloud functions deploy $FunctionName `
   --gen2 `
-  --runtime=python313 `
+  --runtime=python311 `
   --region=$Region `
   --source=$deployDir `
   --entry-point=$EntryPoint `
