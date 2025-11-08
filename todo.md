@@ -17,11 +17,18 @@
 - [x] Created MANUAL_CLEANUP_GUIDE.md with multiple cleanup options
 - [x] Switched to Gen1 deployment to avoid org policy issues
 
+## ✅ MORE COMPLETED TASKS
+- [x] User successfully ran cleanup_and_deploy_ingestion.ps1
+- [x] Ingestion function deployed successfully as Gen1
+- [x] Function is ACTIVE and responding
+- [x] Created comprehensive test script (test_sprint1_deployment.ps1)
+
 ## 🔄 IN PROGRESS
-- Waiting for user to run cleanup and deployment script
+- Testing complete Sprint 1 workflow
 
 ## 📋 NEXT STEPS
-- [ ] User runs cleanup_and_deploy_ingestion.ps1 to clean up and deploy
-- [ ] Verify ingestion function is deployed and working
-- [ ] Test orchestration function with proper Neo4j password
-- [ ] Complete Sprint 1 handoff
+- [ ] User runs test_sprint1_deployment.ps1 to test all functions
+- [ ] Verify ingestion creates documents in Firestore
+- [ ] Verify orchestration connects to Neo4j with new password
+- [ ] Review test results and logs
+- [ ] Complete Sprint 1 handoff documentation
