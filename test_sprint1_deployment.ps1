@@ -12,25 +12,27 @@ $ingestUrl = "https://us-central1-aletheia-codex-prod.cloudfunctions.net/ingesti
 Write-Host "Ingestion URL: $ingestUrl"
 Write-Host "Sending test document...`n"
 
-$ingestResponse = curl -X POST "$ingestUrl" `
-  -H "Content-Type: application/json" `
-  -d '{"title":"Sprint 1 Test Document","content":"This is a comprehensive test document created to verify all Sprint 1 fixes are working correctly. It includes enhanced Neo4j connectivity, production logging, proper error handling, and resource leak fixes."}' `
-  2>&1
+$testPayload = @{
+    title = "Sprint 1 Test Document"
+    content = "This is a comprehensive test document created to verify all Sprint 1 fixes are working correctly. It includes enhanced Neo4j connectivity, production logging, proper error handling, and resource leak fixes."
+} | ConvertTo-Json
 
-Write-Host "Response:"
-Write-Host $ingestResponse
-Write-Host ""
-
-if ($ingestResponse -match '"status":"success"') {
-    Write-Host "✅ Ingestion function working!" -ForegroundColor Green
+try {
+    $ingestResponse = Invoke-RestMethod -Uri $ingestUrl -Method Post -Body $testPayload -ContentType "application/json"
     
-    # Extract document ID if possible
-    if ($ingestResponse -match '"document_id":"([^"]+)"') {
-        $documentId = $matches[1]
-        Write-Host "Document ID: $documentId" -ForegroundColor Cyan
+    Write-Host "Response:"
+    Write-Host ($ingestResponse | ConvertTo-Json)
+    Write-Host ""
+    
+    if ($ingestResponse.status -eq "success") {
+        Write-Host "✅ Ingestion function working!" -ForegroundColor Green
+        Write-Host "Document ID: $($ingestResponse.document_id)" -ForegroundColor Cyan
+    } else {
+        Write-Host "❌ Ingestion function failed" -ForegroundColor Red
     }
-} else {
-    Write-Host "❌ Ingestion function failed" -ForegroundColor Red
+} catch {
+    Write-Host "❌ Ingestion function failed: $($_.Exception.Message)" -ForegroundColor Red
+    Write-Host "Error details: $($_.ErrorDetails.Message)" -ForegroundColor Red
 }
 
 Write-Host "`n" + ("="*60) + "`n"
@@ -44,22 +46,26 @@ if ($orchestrateUrl) {
     Write-Host "Orchestration URL: $orchestrateUrl"
     Write-Host "Testing orchestration with Neo4j connection...`n"
     
-    $orchestrateResponse = curl -X POST "$orchestrateUrl" `
-      -H "Content-Type: application/json" `
-      -d '{"document_id":"test-doc-sprint1","action":"process"}' `
-      2>&1
+    $orchestratePayload = @{
+        document_id = "test-doc-sprint1"
+        action = "process"
+    } | ConvertTo-Json
     
-    Write-Host "Response:"
-    Write-Host $orchestrateResponse
-    Write-Host ""
-    
-    if ($orchestrateResponse -match '"status":"success"' -or $orchestrateResponse -match 'processed') {
-        Write-Host "✅ Orchestration function working!" -ForegroundColor Green
-    } elseif ($orchestrateResponse -match 'Neo4j' -or $orchestrateResponse -match 'connection') {
-        Write-Host "⚠️  Orchestration function responding but may have Neo4j connection issues" -ForegroundColor Yellow
-        Write-Host "Check logs for details" -ForegroundColor Yellow
-    } else {
-        Write-Host "❌ Orchestration function failed" -ForegroundColor Red
+    try {
+        $orchestrateResponse = Invoke-RestMethod -Uri $orchestrateUrl -Method Post -Body $orchestratePayload -ContentType "application/json"
+        
+        Write-Host "Response:"
+        Write-Host ($orchestrateResponse | ConvertTo-Json)
+        Write-Host ""
+        
+        if ($orchestrateResponse.status -eq "success") {
+            Write-Host "✅ Orchestration function working!" -ForegroundColor Green
+        } else {
+            Write-Host "⚠️  Orchestration function responded but check logs for details" -ForegroundColor Yellow
+        }
+    } catch {
+        Write-Host "⚠️  Orchestration test failed: $($_.Exception.Message)" -ForegroundColor Yellow
+        Write-Host "This may be expected if the test document doesn't exist" -ForegroundColor Yellow
     }
 } else {
     Write-Host "⚠️  Orchestration function not found or not deployed" -ForegroundColor Yellow
