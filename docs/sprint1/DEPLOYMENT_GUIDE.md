@@ -57,6 +57,23 @@ gcloud config set project aletheia-codex-prod
 gcloud iam service-accounts list --filter="email:aletheia-functions@aletheia-codex-prod.iam.gserviceaccount.com"
 ```
 
+**⚠️ CRITICAL: Neo4j Secret Configuration**
+
+Before deploying, ensure Neo4j secrets are properly configured in Secret Manager. Secrets with trailing whitespace will cause authentication failures.
+
+See [SECRET_MANAGEMENT_GUIDE.md](./SECRET_MANAGEMENT_GUIDE.md) for:
+- Correct secret storage commands
+- Verification procedures
+- Troubleshooting common issues
+
+Quick verification:
+```bash
+# Check secret lengths (should match exact character counts)
+gcloud secrets versions access latest --secret=NEO4J_URI --project=aletheia-codex-prod | wc -c
+gcloud secrets versions access latest --secret=NEO4J_USER --project=aletheia-codex-prod | wc -c
+gcloud secrets versions access latest --secret=NEO4J_PASSWORD --project=aletheia-codex-prod | wc -c
+```
+
 ### Step 2: Pull Latest Code
 
 ```powershell
@@ -615,6 +632,58 @@ gcloud functions logs read orchestrate `
 3. **Measure improvements** - Compare before/after metrics
 4. **Plan Sprint 2** - Health checks, circuit breaker, monitoring
 5. **Update documentation** - Record any learnings
+
+---
+
+## 🚨 Troubleshooting
+
+### Issue: "503 Illegal metadata" Error
+
+**Symptoms:**
+```json
+{"error":"Neo4j processing failed: Timeout of 60.0s exceeded, last exception: 503 Illegal metadata"}
+```
+
+**Cause:** Neo4j secrets contain trailing whitespace characters
+
+**Solution:**
+1. See [SECRET_MANAGEMENT_GUIDE.md](./SECRET_MANAGEMENT_GUIDE.md) for detailed fix
+2. Quick fix:
+   ```bash
+   # Update secrets without trailing whitespace
+   echo -n 'neo4j+s://your-instance.databases.neo4j.io' | \
+     gcloud secrets versions add NEO4J_URI --project=aletheia-codex-prod --data-file=-
+   
+   echo -n 'neo4j' | \
+     gcloud secrets versions add NEO4J_USER --project=aletheia-codex-prod --data-file=-
+   
+   echo -n 'your-password' | \
+     gcloud secrets versions add NEO4J_PASSWORD --project=aletheia-codex-prod --data-file=-
+   ```
+3. Wait 5-20 minutes for cache expiry or redeploy function
+
+### Issue: Neo4j Instance Paused
+
+**Symptoms:**
+```
+ServiceUnavailable: Unable to connect to neo4j+s://...
+```
+
+**Solution:**
+1. Log into Neo4j Aura console: https://console.neo4j.io
+2. Resume the paused instance (free tier auto-pauses after inactivity)
+3. Wait 60 seconds for instance to start
+4. Test connection again
+
+### Issue: Function Deployment Fails
+
+**Common Causes:**
+- Missing dependencies in requirements.txt
+- Incorrect source directory
+- Service account permissions
+- Region mismatch
+
+**Solution:** Check deployment logs and verify all prerequisites
 
 ---
 
