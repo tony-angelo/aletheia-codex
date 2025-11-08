@@ -12,12 +12,16 @@
 - [x] Created automated deployment script (deploy_ingestion_standalone.ps1)
 - [x] Committed and pushed ingestion fix to repository
 - [x] Created comprehensive INGESTION_DEPLOYMENT_FIX.md guide
+- [x] Identified Gen2 org policy issue and conflicting functions
+- [x] Created cleanup_and_deploy_ingestion.ps1 for automated cleanup
+- [x] Created MANUAL_CLEANUP_GUIDE.md with multiple cleanup options
+- [x] Switched to Gen1 deployment to avoid org policy issues
 
 ## 🔄 IN PROGRESS
-- Waiting for user to deploy ingestion function using new standalone script
+- Waiting for user to run cleanup and deployment script
 
 ## 📋 NEXT STEPS
-- [ ] User runs deploy_ingestion_standalone.ps1 to deploy ingestion function
+- [ ] User runs cleanup_and_deploy_ingestion.ps1 to clean up and deploy
 - [ ] Verify ingestion function is deployed and working
 - [ ] Test orchestration function with proper Neo4j password
 - [ ] Complete Sprint 1 handoff
