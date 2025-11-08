@@ -24,7 +24,7 @@ Write-Host ""
 Write-Host "Password length: $($cleanPassword.Length)" -ForegroundColor Gray
 
 if ($cleanPassword.Length -lt 10) {
-    Write-Host "✗ Password seems too short! Please check and try again." -ForegroundColor Red
+    Write-Host "Password seems too short! Please check and try again." -ForegroundColor Red
     exit 1
 }
 
@@ -35,7 +35,7 @@ try {
     # Create new version
     $cleanPassword | gcloud secrets versions add NEO4J_PASSWORD --data-file=- --project=$PROJECT_ID
     
-    Write-Host "✓ Password updated successfully!" -ForegroundColor Green
+    Write-Host "Password updated successfully!" -ForegroundColor Green
     Write-Host ""
     Write-Host "Next steps:" -ForegroundColor Yellow
     Write-Host "1. Redeploy orchestrate function" -ForegroundColor Gray
@@ -45,6 +45,5 @@ try {
     Write-Host "Failed to update secret: $($_.Exception.Message)" -ForegroundColor Red
     Write-Host ""
     Write-Host "Alternative: Update manually in Cloud Console" -ForegroundColor Yellow
-    $consoleUrl = "https://console.cloud.google.com/security/secret-manager/secret/NEO4J_PASSWORD?project=$PROJECT_ID"
-    Write-Host $consoleUrl -ForegroundColor Cyan
+    Write-Host "https://console.cloud.google.com/security/secret-manager" -ForegroundColor Cyan
 }
