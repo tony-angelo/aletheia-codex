@@ -137,7 +137,7 @@ def create_neo4j_driver(project_id: str = "aletheia-codex-prod", max_retries: in
                 max_connection_lifetime=3600,  # 1 hour
                 max_connection_pool_size=50,
                 connection_acquisition_timeout=60,
-                user_agent="gcloud-run/1.0"
+                grpc_lb_policy_name='pick_first'
             )
             
             # Verify connectivity immediately
