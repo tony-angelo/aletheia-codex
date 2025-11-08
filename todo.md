@@ -19,16 +19,19 @@
 
 ## ✅ MORE COMPLETED TASKS
 - [x] User successfully ran cleanup_and_deploy_ingestion.ps1
-- [x] Ingestion function deployed successfully as Gen1
-- [x] Function is ACTIVE and responding
-- [x] Created comprehensive test script (test_sprint1_deployment.ps1)
+- [x] Ingestion function deployed as Gen1
+- [x] Identified issue: deployed function still using old code with shared imports
+- [x] Created redeploy_ingestion_fixed.ps1 to permanently use standalone version
+- [x] Fixed test_sprint1_deployment.ps1 to use proper PowerShell syntax
+- [x] Created INGESTION_REDEPLOY_NEEDED.md explaining the issue
 
 ## 🔄 IN PROGRESS
-- Testing complete Sprint 1 workflow
+- Need to redeploy ingestion function with standalone code
 
 ## 📋 NEXT STEPS
-- [ ] User runs test_sprint1_deployment.ps1 to test all functions
+- [ ] User runs redeploy_ingestion_fixed.ps1 to fix the function
+- [ ] Verify function deploys without shared module errors
+- [ ] Run test_sprint1_deployment.ps1 to test all functions
 - [ ] Verify ingestion creates documents in Firestore
 - [ ] Verify orchestration connects to Neo4j with new password
-- [ ] Review test results and logs
 - [ ] Complete Sprint 1 handoff documentation
