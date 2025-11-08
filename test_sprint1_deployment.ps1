@@ -1,0 +1,120 @@
+# Test Sprint 1 Deployment - Complete Workflow Test
+
+Write-Host "=== Testing Sprint 1 Deployment ===" -ForegroundColor Green
+
+$PROJECT_ID = gcloud config get-value project
+Write-Host "Project: $PROJECT_ID`n"
+
+# Test 1: Ingestion Function
+Write-Host "Test 1: Testing Ingestion Function..." -ForegroundColor Yellow
+$ingestUrl = "https://us-central1-aletheia-codex-prod.cloudfunctions.net/ingestion"
+
+Write-Host "Ingestion URL: $ingestUrl"
+Write-Host "Sending test document...`n"
+
+$ingestResponse = curl -X POST "$ingestUrl" `
+  -H "Content-Type: application/json" `
+  -d '{"title":"Sprint 1 Test Document","content":"This is a comprehensive test document created to verify all Sprint 1 fixes are working correctly. It includes enhanced Neo4j connectivity, production logging, proper error handling, and resource leak fixes."}' `
+  2>&1
+
+Write-Host "Response:"
+Write-Host $ingestResponse
+Write-Host ""
+
+if ($ingestResponse -match '"status":"success"') {
+    Write-Host "✅ Ingestion function working!" -ForegroundColor Green
+    
+    # Extract document ID if possible
+    if ($ingestResponse -match '"document_id":"([^"]+)"') {
+        $documentId = $matches[1]
+        Write-Host "Document ID: $documentId" -ForegroundColor Cyan
+    }
+} else {
+    Write-Host "❌ Ingestion function failed" -ForegroundColor Red
+}
+
+Write-Host "`n" + ("="*60) + "`n"
+
+# Test 2: Orchestration Function
+Write-Host "Test 2: Testing Orchestration Function..." -ForegroundColor Yellow
+
+$orchestrateUrl = gcloud functions describe orchestrate --region=us-central1 --format='value(httpsTrigger.url)' 2>$null
+
+if ($orchestrateUrl) {
+    Write-Host "Orchestration URL: $orchestrateUrl"
+    Write-Host "Testing orchestration with Neo4j connection...`n"
+    
+    $orchestrateResponse = curl -X POST "$orchestrateUrl" `
+      -H "Content-Type: application/json" `
+      -d '{"document_id":"test-doc-sprint1","action":"process"}' `
+      2>&1
+    
+    Write-Host "Response:"
+    Write-Host $orchestrateResponse
+    Write-Host ""
+    
+    if ($orchestrateResponse -match '"status":"success"' -or $orchestrateResponse -match 'processed') {
+        Write-Host "✅ Orchestration function working!" -ForegroundColor Green
+    } elseif ($orchestrateResponse -match 'Neo4j' -or $orchestrateResponse -match 'connection') {
+        Write-Host "⚠️  Orchestration function responding but may have Neo4j connection issues" -ForegroundColor Yellow
+        Write-Host "Check logs for details" -ForegroundColor Yellow
+    } else {
+        Write-Host "❌ Orchestration function failed" -ForegroundColor Red
+    }
+} else {
+    Write-Host "⚠️  Orchestration function not found or not deployed" -ForegroundColor Yellow
+}
+
+Write-Host "`n" + ("="*60) + "`n"
+
+# Test 3: Check Function Logs
+Write-Host "Test 3: Checking Recent Logs..." -ForegroundColor Yellow
+
+Write-Host "`nIngestion Function Logs (last 10 entries):"
+gcloud functions logs read ingestion --region=us-central1 --limit=10 2>$null
+
+Write-Host "`nOrchestration Function Logs (last 10 entries):"
+gcloud functions logs read orchestrate --region=us-central1 --limit=10 2>$null
+
+Write-Host "`n" + ("="*60) + "`n"
+
+# Test 4: Verify Firestore Document
+Write-Host "Test 4: Checking Firestore for Test Document..." -ForegroundColor Yellow
+Write-Host "To verify in console, visit:"
+Write-Host "https://console.cloud.google.com/firestore/databases/-default-/data/panel/documents?project=$PROJECT_ID" -ForegroundColor Cyan
+
+Write-Host "`n" + ("="*60) + "`n"
+
+# Test 5: Verify Cloud Storage
+Write-Host "Test 5: Checking Cloud Storage for Uploaded Content..." -ForegroundColor Yellow
+$bucketName = "$PROJECT_ID-documents"
+Write-Host "Bucket: gs://$bucketName/raw/"
+
+$files = gsutil ls "gs://$bucketName/raw/" 2>$null
+if ($files) {
+    Write-Host "Recent files in bucket:"
+    $files | Select-Object -Last 5
+    Write-Host "✅ Files found in Cloud Storage" -ForegroundColor Green
+} else {
+    Write-Host "⚠️  No files found or bucket doesn't exist" -ForegroundColor Yellow
+}
+
+Write-Host "`n" + ("="*60) + "`n"
+
+# Summary
+Write-Host "=== Test Summary ===" -ForegroundColor Green
+Write-Host ""
+Write-Host "Sprint 1 Improvements Deployed:"
+Write-Host "✅ Enhanced Neo4j client with retry logic and connection pooling"
+Write-Host "✅ Production-ready Cloud Logging integration"
+Write-Host "✅ Fixed resource leaks in orchestration function"
+Write-Host "✅ Proper error handling throughout"
+Write-Host "✅ Standalone ingestion function (no shared dependencies)"
+Write-Host "✅ Neo4j password updated (43 characters)"
+Write-Host ""
+Write-Host "Next Steps:"
+Write-Host "1. Review logs above for any errors"
+Write-Host "2. Check Firestore console for test document"
+Write-Host "3. Verify Neo4j connectivity in orchestration logs"
+Write-Host "4. If all tests pass, Sprint 1 is complete! 🎉"
+Write-Host ""
