@@ -42,8 +42,9 @@ try {
     Write-Host "2. Test with a document" -ForegroundColor Gray
     
 } catch {
-    Write-Host "✗ Failed to update secret: $($_.Exception.Message)" -ForegroundColor Red
+    Write-Host "Failed to update secret: $($_.Exception.Message)" -ForegroundColor Red
     Write-Host ""
     Write-Host "Alternative: Update manually in Cloud Console" -ForegroundColor Yellow
-    Write-Host "https://console.cloud.google.com/security/secret-manager/secret/NEO4J_PASSWORD?project=$PROJECT_ID" -ForegroundColor Cyan
+    $consoleUrl = "https://console.cloud.google.com/security/secret-manager/secret/NEO4J_PASSWORD?project=$PROJECT_ID"
+    Write-Host $consoleUrl -ForegroundColor Cyan
 }
