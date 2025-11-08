@@ -131,13 +131,12 @@ def create_neo4j_driver(project_id: str = "aletheia-codex-prod", max_retries: in
             
             # Create driver with timeout configuration
             driver = GraphDatabase.driver(
-                uri_clean,
+                uri_clean, 
                 auth=(user_clean, password_clean),
                 connection_timeout=CONNECTION_TIMEOUT,
                 max_connection_lifetime=3600,  # 1 hour
                 max_connection_pool_size=50,
-                connection_acquisition_timeout=60,
-                grpc_lb_policy_name='pick_first'
+                connection_acquisition_timeout=60
             )
             
             # Verify connectivity immediately
