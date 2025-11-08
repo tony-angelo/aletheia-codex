@@ -122,10 +122,17 @@ def create_neo4j_driver(project_id: str = "aletheia-codex-prod", max_retries: in
             logger.info(f"  User: {user}")
             logger.info(f"  Password length: {len(password)}")
             
+            # Ensure credentials are clean strings (no hidden characters)
+            uri_clean = str(uri).strip()
+            user_clean = str(user).strip()
+            password_clean = str(password).strip()
+            
+            logger.info(f"After cleaning - URI: {len(uri_clean)}, User: {len(user_clean)}, Password: {len(password_clean)}")
+            
             # Create driver with timeout configuration
             driver = GraphDatabase.driver(
-                uri, 
-                auth=(user, password),
+                uri_clean, 
+                auth=(user_clean, password_clean),
                 connection_timeout=CONNECTION_TIMEOUT,
                 max_connection_lifetime=3600,  # 1 hour
                 max_connection_pool_size=50,
