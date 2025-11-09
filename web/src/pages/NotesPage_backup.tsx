@@ -2,10 +2,10 @@ import React, { useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useNotes } from '../hooks/useNotes';
 import { useProcessing } from '../hooks/useProcessing';
-import NoteInput from '../components/NoteInput';
-import ProcessingStatus, { ProcessingStatusData } from '../components/ProcessingStatus';
-import ExtractionResults from '../components/ExtractionResults';
-import NoteHistory from '../components/NoteHistory';
+import NoteInput from '../components/features/notes/NoteInput';
+import ProcessingStatus, { ProcessingStatusData } from '../components/features/notes/ProcessingStatus';
+import ExtractionResults from '../components/features/review/ExtractionResults';
+import NoteHistory from '../components/features/notes/NoteHistory';
 
 const NotesPage: React.FC = () => {
   const { user } = useAuth();

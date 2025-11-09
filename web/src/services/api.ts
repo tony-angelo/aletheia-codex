@@ -1,6 +1,8 @@
-// API service for communicating with review backend
+// API service for communicating with review backend (with Firebase Authentication)
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://us-central1-aletheia-codex-prod.cloudfunctions.net/review-api';
+import { getAuthHeaders, handleAuthError } from '../utils/auth';
+
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://review-api-h55nns6ojq-uc.a.run.app';
 
 export interface ApiResponse<T = any> {
   success: boolean;
@@ -11,32 +13,22 @@ export interface ApiResponse<T = any> {
   };
 }
 
-// Auth token management
-let authToken: string | null = null;
-
-export const setAuthToken = (token: string) => {
-  authToken = token;
-};
-
-export const getAuthToken = () => authToken;
-
-// Generic API request helper
+// Generic API request helper with authentication
 const apiRequest = async <T = any>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<ApiResponse<T>> => {
   const url = `${API_BASE_URL}${endpoint}`;
-  
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-    ...(options.headers as Record<string, string> || {}),
-  };
-
-  if (authToken) {
-    headers['Authorization'] = `Bearer ${authToken}`;
-  }
 
   try {
+    // Get authentication headers (includes Firebase token)
+    const authHeaders = await getAuthHeaders();
+    
+    const headers = {
+      ...authHeaders,
+      ...(options.headers || {}),
+    };
+
     const response = await fetch(url, {
       ...options,
       headers,
@@ -45,19 +37,26 @@ const apiRequest = async <T = any>(
     const data = await response.json();
 
     if (!response.ok) {
+      // Handle authentication errors
+      if (response.status === 401) {
+        throw new Error('Authentication failed. Please sign in again.');
+      }
+      if (response.status === 403) {
+        throw new Error('You do not have permission to perform this action.');
+      }
       throw new Error(data.error?.message || `HTTP error! status: ${response.status}`);
     }
 
     return data;
   } catch (error) {
     console.error('API request failed:', error);
-    throw error;
+    throw new Error(handleAuthError(error));
   }
 };
 
 // Review queue API
 export const reviewApi = {
-  // Get pending review items
+  // Get pending review items (authenticated)
   getPendingItems: async (params: {
     limit?: number;
     min_confidence?: number;
@@ -77,7 +76,7 @@ export const reviewApi = {
     return apiRequest(endpoint);
   },
 
-  // Approve a single item
+  // Approve a single item (authenticated)
   approveItem: async (itemId: string) => {
     return apiRequest('/review/approve', {
       method: 'POST',
@@ -85,7 +84,7 @@ export const reviewApi = {
     });
   },
 
-  // Reject a single item
+  // Reject a single item (authenticated)
   rejectItem: async (itemId: string, reason?: string) => {
     return apiRequest('/review/reject', {
       method: 'POST',
@@ -93,7 +92,7 @@ export const reviewApi = {
     });
   },
 
-  // Batch approve items
+  // Batch approve items (authenticated)
   batchApproveItems: async (itemIds: string[]) => {
     return apiRequest('/review/batch-approve', {
       method: 'POST',
@@ -101,7 +100,7 @@ export const reviewApi = {
     });
   },
 
-  // Batch reject items
+  // Batch reject items (authenticated)
   batchRejectItems: async (itemIds: string[], reason?: string) => {
     return apiRequest('/review/batch-reject', {
       method: 'POST',
@@ -109,14 +108,9 @@ export const reviewApi = {
     });
   },
 
-  // Get user statistics
+  // Get user statistics (authenticated)
   getUserStats: async () => {
     return apiRequest('/review/stats');
-  },
-
-  // Health check
-  healthCheck: async () => {
-    return apiRequest('/health');
   },
 };
 

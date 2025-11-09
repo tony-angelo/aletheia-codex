@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
-import { reviewApi, setAuthToken, getAuthToken } from '../services/api';
+import { reviewApi } from '../services/api';
 import { ReviewItem, UserStats } from '../types/review';
+import { isAuthenticated } from '../utils/auth';
 
 interface UseReviewQueueOptions {
   autoRefresh?: boolean;
@@ -149,13 +150,11 @@ export const useReviewQueue = (options: UseReviewQueueOptions = {}) => {
 
   // Initial fetch
   useEffect(() => {
-    // Set mock auth token for development
-    if (!getAuthToken()) {
-      setAuthToken('test-token');
+    // Only fetch if user is authenticated
+    if (isAuthenticated()) {
+      fetchItems();
+      fetchStats();
     }
-    
-    fetchItems();
-    fetchStats();
   }, [fetchItems, fetchStats]);
 
   // Auto-refresh
