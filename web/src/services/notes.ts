@@ -1,5 +1,5 @@
 import { collection, doc, addDoc, updateDoc, deleteDoc, getDocs, getDoc, query, where, orderBy, limit, onSnapshot, Timestamp } from 'firebase/firestore';
-import { db } from './firebase';
+import { db } from '../firebase/config';
 
 export interface Note {
   id: string;

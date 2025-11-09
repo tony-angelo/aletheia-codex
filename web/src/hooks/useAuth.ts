@@ -1,6 +1,16 @@
 import { useState, useEffect } from 'react';
-import { auth } from '../services/firebase';
-import { onAuthStateChanged, User } from 'firebase/auth';
+import { 
+  User,
+  onAuthStateChanged,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signInWithPopup,
+  GoogleAuthProvider,
+  signOut as firebaseSignOut,
+  sendPasswordResetEmail,
+  updateProfile
+} from 'firebase/auth';
+import { auth } from '../firebase/config';
 
 export const useAuth = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -25,45 +35,68 @@ export const useAuth = () => {
     return () => unsubscribe();
   }, []);
 
-  // For development/testing purposes, allow setting a mock user
-  const signInMock = (userId: string = 'test-user') => {
-    setUser({
-      uid: userId,
-      email: `${userId}@example.com`,
-      displayName: `Test User ${userId}`,
-      photoURL: null,
-      emailVerified: true,
-      isAnonymous: false,
-      metadata: {},
-      providerData: [],
-      refreshToken: '',
-      tenantId: null,
-      phoneNumber: null,
-      providerId: 'mock',
-      delete: async () => {},
-      getIdToken: async () => 'mock-token',
-      getIdTokenResult: async () => ({
-        token: 'mock-token',
-        claims: {},
-        authTime: new Date().toISOString(),
-        expirationTime: new Date(Date.now() + 3600000).toISOString(),
-        issuedAtTime: new Date().toISOString(),
-        signInProvider: 'mock',
-        signInSecondFactor: null,
-      }),
-      reload: async () => {},
-      toJSON: () => ({}),
-    } as User);
-    setLoading(false);
-    setError(null);
+  // Sign in with email and password
+  const signInWithEmail = async (email: string, password: string) => {
+    try {
+      setError(null);
+      const result = await signInWithEmailAndPassword(auth, email, password);
+      return result.user;
+    } catch (error: any) {
+      setError(error.message);
+      throw error;
+    }
   };
 
+  // Sign up with email and password
+  const signUpWithEmail = async (email: string, password: string, displayName?: string) => {
+    try {
+      setError(null);
+      const result = await createUserWithEmailAndPassword(auth, email, password);
+      
+      // Update profile with display name if provided
+      if (displayName && result.user) {
+        await updateProfile(result.user, { displayName });
+      }
+      
+      return result.user;
+    } catch (error: any) {
+      setError(error.message);
+      throw error;
+    }
+  };
+
+  // Sign in with Google
+  const signInWithGoogle = async () => {
+    try {
+      setError(null);
+      const provider = new GoogleAuthProvider();
+      const result = await signInWithPopup(auth, provider);
+      return result.user;
+    } catch (error: any) {
+      setError(error.message);
+      throw error;
+    }
+  };
+
+  // Sign out
   const signOut = async () => {
     try {
-      await auth.signOut();
-    } catch (error) {
-      console.error('Sign out error:', error);
-      setError('Failed to sign out');
+      setError(null);
+      await firebaseSignOut(auth);
+    } catch (error: any) {
+      setError(error.message);
+      throw error;
+    }
+  };
+
+  // Reset password
+  const resetPassword = async (email: string) => {
+    try {
+      setError(null);
+      await sendPasswordResetEmail(auth, email);
+    } catch (error: any) {
+      setError(error.message);
+      throw error;
     }
   };
 
@@ -71,7 +104,10 @@ export const useAuth = () => {
     user,
     loading,
     error,
-    signIn: signInMock, // Replace with real sign-in implementation
+    signInWithEmail,
+    signUpWithEmail,
+    signInWithGoogle,
     signOut,
+    resetPassword,
   };
 };
