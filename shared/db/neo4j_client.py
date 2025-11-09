@@ -150,15 +150,13 @@ def execute_neo4j_query_http(
     # Convert URI to HTTP endpoint
     http_uri = convert_uri_to_http(uri)
     
-    # Build endpoint URL
-    endpoint = f"{http_uri}/db/{database}/tx/commit"
+    # Build endpoint URL - using Query API v2 (Aura compatible)
+    endpoint = f"{http_uri}/db/{database}/query/v2"
     
-    # Prepare request payload
+    # Prepare request payload for Query API v2
     payload = {
-        "statements": [{
-            "statement": query,
-            "parameters": parameters or {}
-        }]
+        "statement": query,
+        "parameters": parameters or {}
     }
     
     # Execute request with retry logic
@@ -182,13 +180,27 @@ def execute_neo4j_query_http(
             response.raise_for_status()
             result = response.json()
             
-            # Check for Neo4j errors in response
+            # Check for Neo4j errors in response (Query API v2 format)
             if 'errors' in result and result['errors']:
                 error_msg = result['errors'][0].get('message', 'Unknown error')
                 error_code = result['errors'][0].get('code', 'Unknown code')
                 raise Exception(f"Neo4j query error [{error_code}]: {error_msg}")
             
             logger.info("✓ Neo4j HTTP query executed successfully")
+            
+            # Transform Query API v2 response to match expected format
+            # Query API v2 returns: {"data": {"fields": [...], "values": [[...]]}}
+            # We need to transform to: {"results": [{"data": [{"row": [...]}]}]}
+            if 'data' in result:
+                transformed = {
+                    "results": [{
+                        "data": [
+                            {"row": row} for row in result['data'].get('values', [])
+                        ]
+                    }]
+                }
+                return transformed
+            
             return result
             
         except requests.exceptions.Timeout as e:
