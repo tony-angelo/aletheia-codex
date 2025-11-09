@@ -156,17 +156,17 @@ def require_auth(func: Callable) -> Callable:
     """
     @functools.wraps(func)
     def wrapper(request: Request, *args, **kwargs) -> Any:
-        # Handle CORS preflight
+        # Handle CORS preflight BEFORE authentication
         if request.method == 'OPTIONS':
             headers = {
                 'Access-Control-Allow-Origin': '*',
                 'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-                'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+                'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With',
                 'Access-Control-Max-Age': '3600',
             }
             return ('', 204, headers)
         
-        # Verify authentication
+        # Verify authentication for all other methods
         user_id, error = get_user_id_from_request(request)
         
         if error:
