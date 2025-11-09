@@ -19,7 +19,8 @@ import logging
 
 # Add shared directory to path
 import sys
-sys.path.append('/workspace/aletheia-codex')
+import os
+sys.path.append('/workspace')
 
 from shared.review.queue_manager import create_queue_manager
 from shared.review.approval_workflow import create_approval_workflow
