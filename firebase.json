@@ -25,6 +25,7 @@
   ],
   "hosting": {
     "public": "public",
+    "site": "aletheia-codex-prod",
     "ignore": [
       "firebase.json",
       "**/.*",

@@ -2,7 +2,7 @@
 
 # Core Framework
 functions-framework==3.4.0
-flask==3.0.0
+flask==2.3.3
 
 # Google Cloud Libraries
 google-cloud-firestore==2.14.0

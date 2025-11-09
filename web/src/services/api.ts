@@ -1,6 +1,6 @@
 // API service for communicating with review backend
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8081';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://us-central1-aletheia-codex-prod.cloudfunctions.net/review-api';
 
 export interface ApiResponse<T = any> {
   success: boolean;
