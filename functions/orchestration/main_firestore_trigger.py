@@ -152,7 +152,7 @@ async def process_with_ai(note_id: str, content: str, user_id: str) -> Dict[str,
         cost_monitor = create_cost_monitor()
         
         # Chunk text if needed
-        chunks = chunk_text(content, chunk_size=8000)
+        chunks = chunk_text(content, max_chunk_size=8000)
         logger.info(f"Content split into {len(chunks)} chunks")
         
         all_entities = []
@@ -164,31 +164,19 @@ async def process_with_ai(note_id: str, content: str, user_id: str) -> Dict[str,
             logger.info(f"Processing chunk {i+1}/{len(chunks)} ({len(chunk)} chars)")
             
             try:
-                # extract_entities returns a list of entities directly
-                entities = await ai_service.extract_entities(
+                result = await ai_service.extract_entities_and_relationships(
                     text=chunk,
                     user_id=user_id
                 )
                 
-                # For now, we don't have relationships from this method
-                relationships = []
-                cost = 0.0  # Cost tracking will be added later
+                entities = result.get('entities', [])
+                relationships = result.get('relationships', [])
+                cost = result.get('cost', 0.0)
                 
                 logger.info(f"Chunk {i+1} results: {len(entities)} entities, {len(relationships)} relationships")
                 logger.info(f"Chunk {i+1} cost: ${cost:.4f}")
                 
-                # Convert Entity objects to dicts for storage
-                entity_dicts = [
-                    {
-                        'name': e.name,
-                        'type': e.type,
-                        'confidence': e.confidence,
-                        'properties': e.properties if hasattr(e, 'properties') else {}
-                    }
-                    for e in entities
-                ]
-                
-                all_entities.extend(entity_dicts)
+                all_entities.extend(entities)
                 all_relationships.extend(relationships)
                 total_cost += cost
                 
@@ -196,9 +184,18 @@ async def process_with_ai(note_id: str, content: str, user_id: str) -> Dict[str,
                 logger.error(f"Failed to process chunk {i+1}: {type(e).__name__}: {str(e)}")
                 # Continue with other chunks
         
-        # Record cost (log_usage is async, but we'll skip it for now to keep things simple)
-        # TODO: Implement proper async cost logging
-        logger.info(f"Cost tracking: ${total_cost:.4f} for note {note_id}")
+        # Record cost
+        cost_monitor.record_cost(
+            user_id=user_id,
+            operation='ai_extraction',
+            cost=total_cost,
+            metadata={
+                'note_id': note_id,
+                'chunks_processed': len(chunks),
+                'entities_extracted': len(all_entities),
+                'relationships_detected': len(all_relationships)
+            }
+        )
         
         logger.info(f"=" * 80)
         logger.info(f"AI PROCESSING COMPLETE")
@@ -378,37 +375,19 @@ def orchestration_function(cloud_event: CloudEvent):
         logger.info(f"Event time: {cloud_event.get('time', 'unknown')}")
         
         # Parse event data
-        # CloudEvent data for Firestore events is a protobuf message
-        # We need to access it through the cloud_event attributes
-        logger.info(f"Cloud event attributes: {cloud_event.get_attributes()}")
+        data = cloud_event.data
+        logger.info(f"Event data keys: {list(data.keys())}")
         
-        # Get document path from subject
-        subject = cloud_event.get('subject', '')
-        logger.info(f"Subject: {subject}")
+        # Extract document data from Firestore event
+        value = data.get('value', {})
+        fields = value.get('fields', {})
+        logger.info(f"Document fields: {list(fields.keys())}")
         
-        # Extract note ID from subject (format: documents/notes/noteId)
-        note_id = subject.split('/')[-1] if subject else None
-        logger.info(f"Note ID from subject: {note_id}")
-        
-        # For Firestore events, we need to read the document from Firestore
-        # The event data is protobuf and complex to parse
-        if not note_id:
-            logger.error("No note ID found in event subject")
-            return
-        
-        # Read the note from Firestore
-        db = get_firestore_client()
-        note_doc = db.collection('notes').document(note_id).get()
-        
-        if not note_doc.exists:
-            logger.error(f"Note {note_id} not found in Firestore")
-            return
-        
-        note_data = note_doc.to_dict()
-        user_id = note_data.get('userId', '')
-        content = note_data.get('content', '')
-        status = note_data.get('status', '')
-        
+        # Extract note details
+        note_id = cloud_event.get('subject', '').split('/')[-1]
+        user_id = fields.get('userId', {}).get('stringValue', '')
+        content = fields.get('content', {}).get('stringValue', '')
+        status = fields.get('status', {}).get('stringValue', '')
         
         logger.info(f"Note ID: {note_id}")
         logger.info(f"User ID: {user_id}")
