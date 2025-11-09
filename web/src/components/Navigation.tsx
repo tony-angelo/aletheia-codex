@@ -5,8 +5,14 @@ import { useAuth } from '../hooks/useAuth';
 const Navigation: React.FC = () => {
   const { user, signOut } = useAuth();
 
-  const handleSignOut = () => {
-    signOut();
+  const handleSignOut = async () => {
+    if (window.confirm('Are you sure you want to sign out?')) {
+      try {
+        await signOut();
+      } catch (error) {
+        console.error('Sign out error:', error);
+      }
+    }
   };
 
   return (

@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { Timestamp } from 'firebase/firestore';
-import { getAuth } from 'firebase/auth';
+import { auth } from '../firebase/config';
 import { orchestrationService, ProcessingProgress, ProcessingResult } from '../services/orchestration';
 import { updateNoteStatus } from '../services/notes';
 
@@ -36,7 +36,6 @@ export const useProcessing = (): UseProcessingReturn => {
       });
 
       // Get Firebase Auth token
-      const auth = getAuth();
       const user = auth.currentUser;
       if (!user) {
         throw new Error('User not authenticated');
