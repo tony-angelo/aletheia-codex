@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { useAuth } from '../hooks/useAuth';
+import { useAuth } from '../../hooks/useAuth';
 
 const Navigation: React.FC = () => {
   const { user, signOut } = useAuth();
@@ -27,6 +27,18 @@ const Navigation: React.FC = () => {
             
             {/* Navigation Links */}
             <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
+              <NavLink
+                to="/dashboard"
+                className={({ isActive }) =>
+                  `inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
+                    isActive
+                      ? 'border-blue-500 text-gray-900'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`
+                }
+              >
+                Dashboard
+              </NavLink>
               <NavLink
                 to="/notes"
                 className={({ isActive }) =>
@@ -78,6 +90,16 @@ const Navigation: React.FC = () => {
                     {user?.email}
                   </div>
                 </div>
+                <NavLink
+                  to="/settings"
+                  className="text-gray-500 hover:text-gray-700"
+                  title="Settings"
+                >
+                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                </NavLink>
                 <button
                   onClick={handleSignOut}
                   className="bg-white border border-gray-300 rounded-md py-2 px-3 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
@@ -109,6 +131,18 @@ const Navigation: React.FC = () => {
       {/* Mobile menu (for future implementation) */}
       <div className="sm:hidden" id="mobile-menu">
         <div className="pt-2 pb-3 space-y-1">
+          <NavLink
+            to="/dashboard"
+            className={({ isActive }) =>
+              `block pl-3 pr-4 py-2 border-l-4 text-base font-medium ${
+                isActive
+                  ? 'bg-blue-50 border-blue-500 text-blue-700'
+                  : 'border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800'
+              }`
+            }
+          >
+            Dashboard
+          </NavLink>
           <NavLink
             to="/notes"
             className={({ isActive }) =>
@@ -144,6 +178,18 @@ const Navigation: React.FC = () => {
             }
           >
             Knowledge Graph
+          </NavLink>
+          <NavLink
+            to="/settings"
+            className={({ isActive }) =>
+              `block pl-3 pr-4 py-2 border-l-4 text-base font-medium ${
+                isActive
+                  ? 'bg-blue-50 border-blue-500 text-blue-700'
+                  : 'border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800'
+              }`
+            }
+          >
+            Settings
           </NavLink>
         </div>
       </div>

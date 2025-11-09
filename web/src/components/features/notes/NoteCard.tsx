@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Note } from '../services/notes';
+import { Note } from '../../../services/notes';
 
 interface NoteCardProps {
   note: Note;

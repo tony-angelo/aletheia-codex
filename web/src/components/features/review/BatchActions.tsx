@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useApproval } from '../hooks/useApproval';
+import { useApproval } from '../../../hooks/useApproval';
 
 interface BatchActionsProps {
   selectedItems: Set<string>;

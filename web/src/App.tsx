@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './hooks/useAuth';
-import Navigation from './components/Navigation';
-import SignIn from './components/SignIn';
-import SignUp from './components/SignUp';
+import Navigation from './components/layout/Navigation';
+import SignIn from './components/features/auth/SignIn';
+import SignUp from './components/features/auth/SignUp';
+import DashboardPage from './pages/DashboardPage';
 import NotesPage from './pages/NotesPage';
 import ReviewPage from './pages/ReviewPage';
 import GraphPage from './pages/GraphPage';
+import SettingsPage from './pages/SettingsPage';
 import './App.css';
 
 function App() {
@@ -51,10 +53,12 @@ function App() {
         {/* Main Content */}
         <main className="py-8">
           <Routes>
-            <Route path="/" element={<Navigate to="/notes" />} />
+            <Route path="/" element={<Navigate to="/dashboard" />} />
+            <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/notes" element={<NotesPage />} />
             <Route path="/review" element={<ReviewPage />} />
             <Route path="/graph" element={<GraphPage />} />
+            <Route path="/settings" element={<SettingsPage />} />
           </Routes>
         </main>
 
@@ -62,7 +66,7 @@ function App() {
         <footer className="bg-white border-t border-gray-200 py-8 mt-16">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center text-sm text-gray-500">
-              <p>&copy; 2025 AletheiaCodex. Sprint 4.5 - Firebase Authentication.</p>
+              <p>&copy; 2025 AletheiaCodex. Sprint 6 - Functional UI Foundation.</p>
               <p className="mt-1">
                 Signed in as: {user.email || user.displayName || 'User'}
               </p>

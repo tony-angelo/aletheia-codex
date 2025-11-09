@@ -1,5 +1,5 @@
 import React from 'react';
-import { ConfidenceBadgeProps } from '../types/review';
+import { ConfidenceBadgeProps } from '../../types/review';
 
 const ConfidenceBadge: React.FC<ConfidenceBadgeProps> = ({ 
   confidence, 

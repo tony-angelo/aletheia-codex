@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { useReviewQueue } from '../hooks/useReviewQueue';
 import { ReviewItemType } from '../types/review';
-import EntityCard from '../components/EntityCard';
-import RelationshipCard from '../components/RelationshipCard';
+import EntityCard from '../components/features/review/EntityCard';
+import RelationshipCard from '../components/features/review/RelationshipCard';
 
 const ReviewPage: React.FC = () => {
   const {

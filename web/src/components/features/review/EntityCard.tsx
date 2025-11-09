@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { EntityCardProps, ReviewItemType } from '../types/review';
-import ConfidenceBadge from './ConfidenceBadge';
+import { EntityCardProps, ReviewItemType } from '../../../types/review';
+import ConfidenceBadge from '../../common/ConfidenceBadge';
 
 const EntityCard: React.FC<EntityCardProps> = ({ 
   entity, 

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { RelationshipCardProps, ReviewItemType } from '../types/review';
-import ConfidenceBadge from './ConfidenceBadge';
+import { RelationshipCardProps, ReviewItemType } from '../../../types/review';
+import ConfidenceBadge from '../../common/ConfidenceBadge';
 
 const RelationshipCard: React.FC<RelationshipCardProps> = ({ 
   relationship, 

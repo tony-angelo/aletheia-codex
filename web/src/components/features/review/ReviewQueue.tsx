@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { useReviewQueue } from '../hooks/useReviewQueue';
-import { ReviewItemType } from '../types/review';
+import { useReviewQueue } from '../../../hooks/useReviewQueue';
+import { ReviewItemType } from '../../../types/review';
 import EntityCard from './EntityCard';
 import RelationshipCard from './RelationshipCard';
 

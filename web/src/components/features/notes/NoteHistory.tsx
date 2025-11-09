@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Note } from '../services/notes';
-import { subscribeToUserNotes, getUserNoteStats } from '../services/notes';
+import { Note } from '../../../services/notes';
+import { subscribeToUserNotes, getUserNoteStats } from '../../../services/notes';
 import NoteCard from './NoteCard';
 
 interface NoteHistoryProps {
