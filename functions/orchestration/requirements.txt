@@ -1,5 +1,6 @@
 # Orchestration function dependencies
 functions-framework==3.9.2
+cloudevents>=1.9.0
 Flask==3.1.2
 firebase-admin==6.5.0
 google-cloud-firestore==2.14.0
