@@ -317,15 +317,23 @@ async def populate_knowledge_graph(
 @functions_framework.http
 def orchestrate(request: Request):
     """
-    Process a document: AI extraction, review queue, and knowledge graph storage.
+    Process a document or note: AI extraction, review queue, and knowledge graph storage.
     
-    Expected JSON payload:
+    Expected JSON payload (Mode 1 - Document):
     {
         "document_id": "firestore-doc-id",
         "user_id": "user-id"
     }
+    
+    Expected JSON payload (Mode 2 - Note):
+    {
+        "noteId": "firestore-note-id",
+        "content": "note text content",
+        "userId": "user-id"
+    }
     """
     document_id = None
+    note_id = None
     
     try:
         # Parse and validate request
@@ -333,26 +341,42 @@ def orchestrate(request: Request):
         if not data:
             return jsonify({"error": "Invalid JSON payload"}), 400
         
-        document_id = data.get("document_id")
-        user_id = data.get("user_id")
+        # Check for note mode (Sprint 4)
+        note_id = data.get("noteId")
+        user_id = data.get("userId") or data.get("user_id")
         
-        if not document_id or not user_id:
-            return jsonify({
-                "error": "Invalid payload. Expected document_id and user_id"
-            }), 400
-        
-        logger.info(f"Processing document: {document_id} for user: {user_id}")
-        
-        # Update status to processing
-        update_document_status(document_id, "processing")
-        
-        # Fetch document content and metadata
-        try:
-            content, doc_data = fetch_document_content(document_id)
-            title = doc_data.get("title", "Untitled")
-        except Exception as e:
-            update_document_status(document_id, "failed", error=f"Failed to fetch document: {str(e)}")
-            return jsonify({"error": f"Failed to fetch document: {str(e)}"}), 500
+        if note_id:
+            # Note mode - content is provided directly
+            content = data.get("content")
+            if not content or not user_id:
+                return jsonify({
+                    "error": "Invalid payload. Expected noteId, content, and userId"
+                }), 400
+            
+            logger.info(f"Processing note: {note_id} for user: {user_id}")
+            document_id = note_id  # Use note_id as document_id for tracking
+            title = "Note"
+            
+        else:
+            # Document mode (existing functionality)
+            document_id = data.get("document_id")
+            if not document_id or not user_id:
+                return jsonify({
+                    "error": "Invalid payload. Expected document_id and user_id OR noteId, content, and userId"
+                }), 400
+            
+            logger.info(f"Processing document: {document_id} for user: {user_id}")
+            
+            # Update status to processing
+            update_document_status(document_id, "processing")
+            
+            # Fetch document content and metadata
+            try:
+                content, doc_data = fetch_document_content(document_id)
+                title = doc_data.get("title", "Untitled")
+            except Exception as e:
+                update_document_status(document_id, "failed", error=f"Failed to fetch document: {str(e)}")
+                return jsonify({"error": f"Failed to fetch document: {str(e)}"}), 500
         
         # Process with AI
         try:
@@ -417,7 +441,8 @@ def orchestrate(request: Request):
             processing_cost=costs['total']
         )
         
-        return jsonify({
+        response_data = {
+            "success": True,
             "status": "success",
             "document_id": document_id,
             "user_id": user_id,
@@ -429,7 +454,17 @@ def orchestrate(request: Request):
             "relationships_in_graph": graph_summary['relationships_created'],
             "processing_cost": costs['total'],
             "cost_breakdown": costs
-        }), 200
+        }
+        
+        # Add noteId for note mode
+        if note_id:
+            response_data["noteId"] = note_id
+            response_data["extractionSummary"] = {
+                "entityCount": len(entities),
+                "relationshipCount": len(relationships)
+            }
+        
+        return jsonify(response_data), 200
         
     except Exception as e:
         logger.error(f"Unexpected error processing document: {type(e).__name__}: {str(e)}")

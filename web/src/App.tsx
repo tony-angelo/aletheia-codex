@@ -1,32 +1,28 @@
-import React, { useState } from 'react';
+import React from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './hooks/useAuth';
-import ReviewQueue from './components/ReviewQueue';
-import BatchActions from './components/BatchActions';
+import Navigation from './components/Navigation';
+import NotesPage from './pages/NotesPage';
+import ReviewPage from './pages/ReviewPage';
+import GraphPage from './pages/GraphPage';
 import './App.css';
 
 function App() {
-  const { user, loading, signIn, signOut } = useAuth();
-  const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
+  const { user, loading, signIn } = useAuth();
 
   // Handle mock authentication for development
   const handleSignIn = () => {
     signIn('demo-user');
   };
 
-  const handleSignOut = () => {
-    signOut();
-    setSelectedItems(new Set());
-  };
-
-  const handleActionComplete = () => {
-    setSelectedItems(new Set());
-  };
 
   if (loading) {
     return (
-      <div className="loading">
-        <div className="spinner"></div>
-        <p className="ml-2 text-gray-600">Loading application...</p>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="flex items-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <p className="ml-2 text-gray-600">Loading application...</p>
+        </div>
       </div>
     );
   }
@@ -37,10 +33,10 @@ function App() {
         <div className="max-w-md w-full space-y-8">
           <div>
             <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-              AletheiaCodex Review System
+              AletheiaCodex
             </h2>
             <p className="mt-2 text-center text-sm text-gray-600">
-              Review AI-extracted entities and relationships
+              AI-powered Knowledge Extraction & Review
             </p>
           </div>
           <div className="mt-8 space-y-6">
@@ -63,60 +59,34 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="header">
-        <div className="container">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">
-                AletheiaCodex
-              </h1>
-              <p className="text-sm text-gray-600">
-                AI Entity & Relationship Review System
+    <BrowserRouter>
+      <div className="min-h-screen bg-gray-50">
+        {/* Navigation */}
+        <Navigation />
+
+        {/* Main Content */}
+        <main className="py-8">
+          <Routes>
+            <Route path="/" element={<Navigate to="/notes" />} />
+            <Route path="/notes" element={<NotesPage />} />
+            <Route path="/review" element={<ReviewPage />} />
+            <Route path="/graph" element={<GraphPage />} />
+          </Routes>
+        </main>
+
+        {/* Footer */}
+        <footer className="bg-white border-t border-gray-200 py-8 mt-16">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center text-sm text-gray-500">
+              <p>&copy; 2024 AletheiaCodex. Sprint 4 Note Input & AI Processing.</p>
+              <p className="mt-1">
+                Built with React, TypeScript, and Firebase.
               </p>
             </div>
-            <div className="flex items-center gap-4">
-              <div className="text-right">
-                <div className="text-sm font-medium text-gray-900">
-                  {user.displayName || user.email}
-                </div>
-                <div className="text-xs text-gray-500">
-                  {user.email}
-                </div>
-              </div>
-              <button
-                onClick={handleSignOut}
-                className="btn btn-outline text-sm"
-              >
-                Sign Out
-              </button>
-            </div>
           </div>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="py-8">
-        <ReviewQueue />
-        <BatchActions 
-          selectedItems={selectedItems}
-          onActionComplete={handleActionComplete}
-        />
-      </main>
-
-      {/* Footer */}
-      <footer className="bg-white border-t border-gray-200 py-8 mt-16">
-        <div className="container">
-          <div className="text-center text-sm text-gray-500">
-            <p>&copy; 2024 AletheiaCodex. Sprint 3 Review Queue & User Interface.</p>
-            <p className="mt-1">
-              Built with React, TypeScript, and Firebase.
-            </p>
-          </div>
-        </div>
-      </footer>
-    </div>
+        </footer>
+      </div>
+    </BrowserRouter>
   );
 }
 
