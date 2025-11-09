@@ -1,0 +1,13 @@
+# Include everything except these
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+*.egg
+*.egg-info/
+.git/
+.gitignore
+main_backup.py
+main_fixed.py
