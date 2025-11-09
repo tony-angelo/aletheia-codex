@@ -216,11 +216,12 @@ aletheia-codex/
 3. Configure production secrets
 4. Test in production environment
 
-### Phase 7: Production Validation (Day 15)
+### Phase 7: Production Validation & Completion Report (Day 15)
 1. Run all tests in production
 2. Verify performance targets
 3. Check production logs
-4. Create completion report
+4. Create completion report using `docs/sprint3/COMPLETION_REPORT_TEMPLATE.md`
+5. Verify all 15 completion checkboxes
 
 ## 🎯 Performance Targets
 
@@ -286,10 +287,12 @@ aletheia-codex/
 4. Check production logs
 
 ### Step 6: Complete (1 day)
-1. Create ONE completion report
-2. Create PR with all changes
-3. Mark sprint complete
-4. Wait for user confirmation
+1. Create ONE completion report using `docs/sprint3/COMPLETION_REPORT_TEMPLATE.md`
+2. Fill out ALL sections of the template
+3. Verify all 15 completion checkboxes
+4. Create PR with all changes
+5. Mark sprint complete
+6. Wait for user confirmation
 
 ## 🆘 When You Need Help
 

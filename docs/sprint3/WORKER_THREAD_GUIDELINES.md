@@ -161,6 +161,8 @@ At the end of the sprint, create a single document:
 docs/sprint(n)/COMPLETION_REPORT.md
 ```
 
+**Use the template**: `docs/sprint3/COMPLETION_REPORT_TEMPLATE.md`
+
 This should include:
 1. **Summary**: What was accomplished
 2. **Deployment Details**: What was deployed and where
@@ -168,6 +170,7 @@ This should include:
 4. **Performance Metrics**: Actual vs. target metrics
 5. **Known Issues**: Any issues discovered (if any)
 6. **Next Steps**: Recommendations for next sprint
+7. **All 15 completion checkboxes verified**
 
 ### ❌ DON'T: Create Excessive Status Documents
 
