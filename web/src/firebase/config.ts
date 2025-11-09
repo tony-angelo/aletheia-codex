@@ -4,18 +4,13 @@ import { getAuth } from 'firebase/auth';
 import { getFunctions } from 'firebase/functions';
 
 const firebaseConfig = {
-  apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
-  authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.REACT_APP_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.REACT_APP_FIREBASE_APP_ID,
+  apiKey: "AIzaSyCPUO0yS3_1BiJyMP96TgDy_tJgrpEvPTY",
+  authDomain: "aletheia-codex-prod.firebaseapp.com",
+  projectId: "aletheia-codex-prod",
+  storageBucket: "aletheia-codex-prod.firebasestorage.app",
+  messagingSenderId: "679360092359",
+  appId: "1:679360092359:web:9af0ba475c8d03538686e2",
 };
-
-// Validate configuration
-if (!firebaseConfig.apiKey || !firebaseConfig.authDomain) {
-  throw new Error('Firebase configuration is missing. Check your .env file.');
-}
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
