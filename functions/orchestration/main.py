@@ -19,11 +19,19 @@ FEATURES:
 import functions_framework
 from flask import Request, jsonify
 from google.cloud import firestore, storage
+from firebase_admin import auth, initialize_app
 import os
 import json
 import time
 from typing import Optional, Tuple, List, Dict, Any
 import asyncio
+
+# Initialize Firebase Admin
+try:
+    initialize_app()
+except ValueError:
+    # Already initialized
+    pass
 
 from shared.db.firestore_client import get_firestore_client
 from shared.db.neo4j_client import (
@@ -314,45 +322,106 @@ async def populate_knowledge_graph(
         raise
 
 
+def verify_auth_token(request: Request) -> Optional[str]:
+    """
+    Verify Firebase Auth token from Authorization header.
+    
+    Returns:
+        User ID if token is valid, None otherwise
+    """
+    auth_header = request.headers.get('Authorization', '')
+    if not auth_header.startswith('Bearer '):
+        return None
+    
+    token = auth_header.replace('Bearer ', '')
+    try:
+        decoded_token = auth.verify_id_token(token)
+        return decoded_token['uid']
+    except Exception as e:
+        logger.error(f"Token verification failed: {str(e)}")
+        return None
+
+
 @functions_framework.http
 def orchestrate(request: Request):
     """
-    Process a document: AI extraction, review queue, and knowledge graph storage.
+    Process a document or note: AI extraction, review queue, and knowledge graph storage.
     
-    Expected JSON payload:
+    Expected JSON payload (Mode 1 - Document):
     {
         "document_id": "firestore-doc-id",
         "user_id": "user-id"
     }
+    
+    Expected JSON payload (Mode 2 - Note):
+    {
+        "noteId": "firestore-note-id",
+        "content": "note text content",
+        "userId": "user-id"
+    }
+    
+    Requires Authorization header with Firebase Auth token.
     """
     document_id = None
+    note_id = None
     
     try:
+        # Verify authentication
+        authenticated_user_id = verify_auth_token(request)
+        if not authenticated_user_id:
+            return jsonify({"error": "Unauthorized - Invalid or missing authentication token"}), 401
+        
         # Parse and validate request
         data = request.get_json(silent=True)
         if not data:
             return jsonify({"error": "Invalid JSON payload"}), 400
         
-        document_id = data.get("document_id")
-        user_id = data.get("user_id")
+        # Check for note mode (Sprint 4)
+        note_id = data.get("noteId")
+        user_id = data.get("userId") or data.get("user_id")
         
-        if not document_id or not user_id:
+        # Verify the authenticated user matches the requested user
+        if user_id and user_id != authenticated_user_id:
             return jsonify({
-                "error": "Invalid payload. Expected document_id and user_id"
-            }), 400
+                "error": "Forbidden - Cannot process notes for other users"
+            }), 403
         
-        logger.info(f"Processing document: {document_id} for user: {user_id}")
+        # Use authenticated user ID if not provided
+        if not user_id:
+            user_id = authenticated_user_id
         
-        # Update status to processing
-        update_document_status(document_id, "processing")
-        
-        # Fetch document content and metadata
-        try:
-            content, doc_data = fetch_document_content(document_id)
-            title = doc_data.get("title", "Untitled")
-        except Exception as e:
-            update_document_status(document_id, "failed", error=f"Failed to fetch document: {str(e)}")
-            return jsonify({"error": f"Failed to fetch document: {str(e)}"}), 500
+        if note_id:
+            # Note mode - content is provided directly
+            content = data.get("content")
+            if not content:
+                return jsonify({
+                    "error": "Invalid payload. Expected noteId and content"
+                }), 400
+            
+            logger.info(f"Processing note: {note_id} for user: {user_id}")
+            document_id = note_id  # Use note_id as document_id for tracking
+            title = "Note"
+            
+        else:
+            # Document mode (existing functionality)
+            document_id = data.get("document_id")
+            if not document_id or not user_id:
+                return jsonify({
+                    "error": "Invalid payload. Expected document_id and user_id OR noteId, content, and userId"
+                }), 400
+            
+            logger.info(f"Processing document: {document_id} for user: {user_id}")
+            
+            # Update status to processing
+            update_document_status(document_id, "processing")
+            
+            # Fetch document content and metadata
+            try:
+                content, doc_data = fetch_document_content(document_id)
+                title = doc_data.get("title", "Untitled")
+            except Exception as e:
+                update_document_status(document_id, "failed", error=f"Failed to fetch document: {str(e)}")
+                return jsonify({"error": f"Failed to fetch document: {str(e)}"}), 500
         
         # Process with AI
         try:
@@ -417,7 +486,8 @@ def orchestrate(request: Request):
             processing_cost=costs['total']
         )
         
-        return jsonify({
+        response_data = {
+            "success": True,
             "status": "success",
             "document_id": document_id,
             "user_id": user_id,
@@ -429,7 +499,17 @@ def orchestrate(request: Request):
             "relationships_in_graph": graph_summary['relationships_created'],
             "processing_cost": costs['total'],
             "cost_breakdown": costs
-        }), 200
+        }
+        
+        # Add noteId for note mode
+        if note_id:
+            response_data["noteId"] = note_id
+            response_data["extractionSummary"] = {
+                "entityCount": len(entities),
+                "relationshipCount": len(relationships)
+            }
+        
+        return jsonify(response_data), 200
         
     except Exception as e:
         logger.error(f"Unexpected error processing document: {type(e).__name__}: {str(e)}")
