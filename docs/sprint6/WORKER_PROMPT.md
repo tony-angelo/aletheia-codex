@@ -33,9 +33,17 @@ Sprint 5 proved the **core workflow works**. Now we need to complete the UI and 
 
 ---
 
-## Success Criteria (8 Checkboxes)
+## Success Criteria (9 Checkboxes)
 
-Sprint 6 is ONLY complete when ALL 8 criteria are met:
+Sprint 6 is ONLY complete when ALL 9 criteria are met:
+
+### 0. ✅ Authentication Implemented (PREREQUISITE)
+- Backend functions use `@require_auth` decorator
+- Frontend services send Authorization headers
+- Functions deployed without `--allow-unauthenticated`
+- Authentication tested and working in production
+- Authenticated requests succeed (200 OK)
+- Unauthenticated requests fail (401 Unauthorized)
 
 ### 1. ✅ All Pages Functional
 - Dashboard/Home page with overview statistics
