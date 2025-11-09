@@ -1,4 +1,4 @@
-import { auth } from '../firebase/config';
+import { getAuthHeaders, handleAuthError } from '../utils/auth';
 
 const GRAPH_API_URL = process.env.REACT_APP_GRAPH_API_URL || 
   'https://us-central1-aletheia-codex-prod.cloudfunctions.net/graph-function';
@@ -28,86 +28,106 @@ export interface NodesResponse {
 
 export const graphService = {
   /**
-   * Get list of nodes for current user
+   * Get list of nodes for current user (authenticated)
    */
   async getNodes(options: {
     limit?: number;
     offset?: number;
     type?: string;
   } = {}): Promise<NodesResponse> {
-    const user = auth.currentUser;
-    if (!user) throw new Error('Not authenticated');
-    
-    const token = await user.getIdToken();
-    
-    const params = new URLSearchParams({
-      userId: user.uid,
-      limit: String(options.limit || 50),
-      offset: String(options.offset || 0),
-    });
-    
-    if (options.type) {
-      params.append('type', options.type);
+    try {
+      // Get authentication headers (includes Firebase token)
+      const headers = await getAuthHeaders();
+      
+      // Build query parameters (no userId needed - comes from auth token)
+      const params = new URLSearchParams({
+        limit: String(options.limit || 50),
+        offset: String(options.offset || 0),
+      });
+      
+      if (options.type) {
+        params.append('type', options.type);
+      }
+      
+      const response = await fetch(`${GRAPH_API_URL}?${params}`, {
+        headers,
+      });
+      
+      if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error('Authentication failed. Please sign in again.');
+        }
+        throw new Error(`Failed to fetch nodes: ${response.statusText}`);
+      }
+      
+      return response.json();
+    } catch (error) {
+      console.error('Error fetching nodes:', error);
+      throw new Error(handleAuthError(error));
     }
-    
-    const response = await fetch(`${GRAPH_API_URL}?${params}`, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
-    });
-    if (!response.ok) {
-      throw new Error(`Failed to fetch nodes: ${response.statusText}`);
-    }
-    
-    return response.json();
   },
   
   /**
-   * Get detailed information about a specific node
+   * Get detailed information about a specific node (authenticated)
    */
   async getNodeDetails(nodeId: string): Promise<NodeDetails> {
-    const user = auth.currentUser;
-    if (!user) throw new Error('Not authenticated');
-    
-    const token = await user.getIdToken();
-    const params = new URLSearchParams({ userId: user.uid, nodeId });
-    
-    const response = await fetch(`${GRAPH_API_URL}?${params}`, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
-    });
-    
-    if (!response.ok) {
-      throw new Error(`Failed to fetch node details: ${response.statusText}`);
+    try {
+      // Get authentication headers
+      const headers = await getAuthHeaders();
+      
+      // Build query parameters (no userId needed)
+      const params = new URLSearchParams({ nodeId });
+      
+      const response = await fetch(`${GRAPH_API_URL}?${params}`, {
+        headers,
+      });
+      
+      if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error('Authentication failed. Please sign in again.');
+        }
+        if (response.status === 404) {
+          throw new Error('Node not found');
+        }
+        throw new Error(`Failed to fetch node details: ${response.statusText}`);
+      }
+      
+      return response.json();
+    } catch (error) {
+      console.error('Error fetching node details:', error);
+      throw new Error(handleAuthError(error));
     }
-    
-    return response.json();
   },
   
   /**
-   * Search nodes by name or properties
+   * Search nodes by name or properties (authenticated)
    */
   async searchNodes(query: string): Promise<NodesResponse> {
-    const user = auth.currentUser;
-    if (!user) throw new Error('Not authenticated');
-    
-    const token = await user.getIdToken();
-    const params = new URLSearchParams({
-      userId: user.uid,
-      query,
-      search: 'true',
-    });
-    
-    const response = await fetch(`${GRAPH_API_URL}?${params}`, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
-    });
-    if (!response.ok) {
-      throw new Error(`Failed to search nodes: ${response.statusText}`);
+    try {
+      // Get authentication headers
+      const headers = await getAuthHeaders();
+      
+      // Build query parameters (no userId needed)
+      const params = new URLSearchParams({
+        query,
+        search: 'true',
+      });
+      
+      const response = await fetch(`${GRAPH_API_URL}?${params}`, {
+        headers,
+      });
+      
+      if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error('Authentication failed. Please sign in again.');
+        }
+        throw new Error(`Failed to search nodes: ${response.statusText}`);
+      }
+      
+      return response.json();
+    } catch (error) {
+      console.error('Error searching nodes:', error);
+      throw new Error(handleAuthError(error));
     }
-    
-    return response.json();
   },
 };

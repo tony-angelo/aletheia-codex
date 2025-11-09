@@ -1,30 +1,28 @@
 import functions_framework
 from flask import jsonify, request
+from shared.auth.firebase_auth import require_auth
 from shared.db.neo4j_client import execute_query
 import logging
 
 logger = logging.getLogger(__name__)
 
 @functions_framework.http
+@require_auth  # Require Firebase authentication
 def graph_function(request):
-    """HTTP Cloud Function for graph operations."""
+    """HTTP Cloud Function for graph operations (authenticated)."""
     
     # CORS headers
-    if request.method == 'OPTIONS':
-        headers = {
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Methods': 'GET, POST',
-            'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-        }
-        return ('', 204, headers)
-    
-    headers = {'Access-Control-Allow-Origin': '*'}
+    headers = {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+        'Access-Control-Max-Age': '3600'
+    }
     
     try:
-        # Get user ID from request
-        user_id = request.args.get('userId')
-        if not user_id:
-            return (jsonify({'error': 'userId required'}), 400, headers)
+        # Get authenticated user ID (set by @require_auth decorator)
+        user_id = request.user_id
+        logger.info(f"Processing graph request for user: {user_id}")
         
         # Route based on query parameters
         if request.args.get('search') == 'true':
@@ -40,7 +38,7 @@ def graph_function(request):
         return (jsonify({'error': str(e)}), 500, headers)
 
 def get_nodes(user_id: str, request, headers):
-    """Get list of nodes for user."""
+    """Get list of nodes for authenticated user."""
     limit = int(request.args.get('limit', 50))
     offset = int(request.args.get('offset', 0))
     node_type = request.args.get('type')  # Optional filter by type
@@ -61,7 +59,7 @@ def get_nodes(user_id: str, request, headers):
     """
     
     result = execute_query(
-        query=query,
+        cypher=query,
         parameters={
             'userId': user_id,
             'offset': offset,
@@ -70,7 +68,7 @@ def get_nodes(user_id: str, request, headers):
     )
     
     nodes = []
-    for record in result.get('data', []):
+    for record in result:
         node_data = dict(record['n'])
         node_data['types'] = record['types']
         node_data['id'] = record['id']
@@ -81,7 +79,7 @@ def get_nodes(user_id: str, request, headers):
 def get_node_details(user_id: str, node_id: str, headers):
     """Get detailed information about a node."""
     
-    # Get node with relationships
+    # Get node with relationships - verify user owns it
     query = """
     MATCH (u:User {userId: $userId})-[:OWNS]->(n)
     WHERE elementId(n) = $nodeId
@@ -100,28 +98,21 @@ def get_node_details(user_id: str, node_id: str, headers):
     """
     
     result = execute_query(
-        query=query,
+        cypher=query,
         parameters={
             'userId': user_id,
             'nodeId': node_id
         }
     )
     
-    if not result.get('data'):
+    if not result:
         return (jsonify({'error': 'Node not found'}), 404, headers)
     
-    record = result['data'][0]
+    record = result[0]
     node_data = dict(record['n'])
     node_data['types'] = record['types']
     node_data['id'] = record['id']
-    
-    # Filter out null relationships
-    relationships = [r for r in record['relationships'] if r['node'] is not None]
-    for rel in relationships:
-        if rel['node']:
-            rel['node'] = dict(rel['node'])
-    
-    node_data['relationships'] = relationships
+    node_data['relationships'] = record['relationships']
     
     return (jsonify(node_data), 200, headers)
 
@@ -131,7 +122,7 @@ def search_nodes(user_id: str, request, headers):
     if not query_text:
         return (jsonify({'error': 'query parameter required'}), 400, headers)
     
-    # Search by name (case-insensitive)
+    # Search by name (case-insensitive) - only user's nodes
     query = """
     MATCH (u:User {userId: $userId})-[:OWNS]->(n)
     WHERE toLower(n.name) CONTAINS toLower($query)
@@ -141,7 +132,7 @@ def search_nodes(user_id: str, request, headers):
     """
     
     result = execute_query(
-        query=query,
+        cypher=query,
         parameters={
             'userId': user_id,
             'query': query_text
@@ -149,7 +140,7 @@ def search_nodes(user_id: str, request, headers):
     )
     
     nodes = []
-    for record in result.get('data', []):
+    for record in result:
         node_data = dict(record['n'])
         node_data['types'] = record['types']
         node_data['id'] = record['id']
