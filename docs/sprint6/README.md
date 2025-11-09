@@ -33,10 +33,25 @@ Sprint 5 proved the **core workflow works** (note processing, AI extraction, rev
 
 ---
 
-## Success Criteria (8 Checkboxes)
+## ⚠️ CRITICAL PREREQUISITE: Authentication
 
-Sprint 6 is complete when ALL of these work:
+**MUST COMPLETE FIRST** before any other Sprint 6 work.
 
+**Issue**: GCP organization policy prevents `--allow-unauthenticated` on Cloud Functions.
+
+**Solution**: Implement Firebase Authentication for all HTTP-triggered functions.
+
+**Timeline**: Day 1 (4-6 hours)
+
+**Reference**: See `AUTHENTICATION_BRIEFING.md` for complete instructions.
+
+---
+
+## Success Criteria (9 Checkboxes)
+
+Sprint 6 is complete when ALL 9 of these work:
+
+0. ✅ **Authentication Implemented** - Firebase Auth for all Cloud Functions (PREREQUISITE)
 1. ✅ **All Pages Functional** - Dashboard, Graph, Settings, enhanced Notes/Review
 2. ✅ **Component Library Organized** - Categorized, documented, clear patterns
 3. ✅ **Function Library Documented** - JSDoc comments, README, API reference
