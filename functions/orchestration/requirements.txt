@@ -5,4 +5,4 @@ google-cloud-firestore==2.14.0
 google-cloud-secret-manager==2.18.0
 google-cloud-storage==2.14.0
 google-generativeai==0.3.2
-neo4j==6.0.3
+requests>=2.31.0

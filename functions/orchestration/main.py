@@ -1,12 +1,15 @@
 """
-AletheiaCodex - Orchestration Function (Fixed)
+AletheiaCodex - Orchestration Function (HTTP API)
 Processes documents: chunking, embedding, and knowledge graph storage.
 
-FIXES:
-- Proper driver cleanup with try-finally
+UPDATED: Now uses Neo4j HTTP API instead of Bolt protocol to avoid
+Cloud Run's gRPC proxy incompatibility.
+
+FEATURES:
+- HTTP API for Neo4j connectivity
 - Retry logic for transient failures
 - Enhanced error handling
-- Better logging
+- Comprehensive logging
 """
 
 import functions_framework
@@ -15,21 +18,16 @@ from google.cloud import firestore, storage
 import os
 import json
 import time
-from typing import Optional, Tuple
+from typing import Optional, Tuple, List, Dict, Any
 
 from shared.db.firestore_client import get_firestore_client
-from shared.db.neo4j_client import get_neo4j_driver, Neo4jConnection
+from shared.db.neo4j_client import (
+    create_neo4j_http_client,
+    execute_neo4j_query_http
+)
 from shared.ai.gemini_client import generate_embeddings
 from shared.utils.logging import get_logger
 from shared.utils.text_chunker import chunk_text
-
-# Neo4j exceptions for retry logic
-from neo4j.exceptions import (
-    ServiceUnavailable, 
-    SessionExpired, 
-    TransientError,
-    Neo4jError
-)
 
 logger = get_logger("orchestration")
 
@@ -63,7 +61,7 @@ def retry_with_backoff(func, max_retries=MAX_RETRIES, initial_delay=INITIAL_RETR
     for attempt in range(max_retries):
         try:
             return func()
-        except (ServiceUnavailable, SessionExpired, TransientError) as e:
+        except Exception as e:
             last_exception = e
             if attempt < max_retries - 1:
                 logger.warning(
@@ -75,10 +73,6 @@ def retry_with_backoff(func, max_retries=MAX_RETRIES, initial_delay=INITIAL_RETR
             else:
                 logger.error(f"All {max_retries} retry attempts failed")
                 raise
-        except Exception as e:
-            # Non-transient errors should not be retried
-            logger.error(f"Non-retryable error: {type(e).__name__}: {str(e)}")
-            raise
     
     # Should never reach here, but just in case
     if last_exception:
@@ -151,30 +145,39 @@ def fetch_document_content(document_id: str) -> Tuple[str, dict]:
         raise
 
 
-def process_chunks_to_neo4j(document_id: str, title: str, chunks: list, driver):
+def process_chunks_to_neo4j(
+    document_id: str, 
+    title: str, 
+    chunks: List[Dict[str, Any]], 
+    client: Dict[str, str]
+):
     """
-    Process and store chunks in Neo4j with retry logic.
+    Process and store chunks in Neo4j using HTTP API.
     
     Args:
         document_id: Document ID
         title: Document title
         chunks: List of text chunks
-        driver: Neo4j driver instance
+        client: Neo4j HTTP client configuration
     """
     def create_document_node():
         """Create document node in Neo4j."""
-        with driver.session() as session:
-            session.run(
-                """
-                MERGE (d:Document {id: $doc_id})
-                SET d.title = $title,
-                    d.created_at = datetime(),
-                    d.chunk_count = $chunk_count
-                """,
-                doc_id=document_id,
-                title=title,
-                chunk_count=len(chunks)
-            )
+        execute_neo4j_query_http(
+            client['uri'],
+            client['user'],
+            client['password'],
+            """
+            MERGE (d:Document {id: $doc_id})
+            SET d.title = $title,
+                d.created_at = datetime(),
+                d.chunk_count = $chunk_count
+            """,
+            {
+                "doc_id": document_id,
+                "title": title,
+                "chunk_count": len(chunks)
+            }
+        )
         logger.info(f"Created document node: {document_id}")
     
     # Create document node with retry
@@ -190,26 +193,30 @@ def process_chunks_to_neo4j(document_id: str, title: str, chunks: list, driver):
         
         # Store chunk with retry
         def store_chunk():
-            with driver.session() as session:
-                session.run(
-                    """
-                    MATCH (d:Document {id: $doc_id})
-                    CREATE (c:Chunk {
-                        id: $chunk_id,
-                        text: $text,
-                        position: $position,
-                        length: $length,
-                        embedding: $embedding
-                    })
-                    CREATE (d)-[:HAS_CHUNK {position: $position}]->(c)
-                    """,
-                    doc_id=document_id,
-                    chunk_id=f"{document_id}_chunk_{idx}",
-                    text=text,
-                    position=idx,
-                    length=chunk['length'],
-                    embedding=embedding
-                )
+            execute_neo4j_query_http(
+                client['uri'],
+                client['user'],
+                client['password'],
+                """
+                MATCH (d:Document {id: $doc_id})
+                CREATE (c:Chunk {
+                    id: $chunk_id,
+                    text: $text,
+                    position: $position,
+                    length: $length,
+                    embedding: $embedding
+                })
+                CREATE (d)-[:HAS_CHUNK {position: $position}]->(c)
+                """,
+                {
+                    "doc_id": document_id,
+                    "chunk_id": f"{document_id}_chunk_{idx}",
+                    "text": text,
+                    "position": idx,
+                    "length": chunk['length'],
+                    "embedding": embedding
+                }
+            )
         
         retry_with_backoff(store_chunk)
         logger.info(f"Stored chunk {idx + 1}/{len(chunks)}")
@@ -227,7 +234,6 @@ def orchestrate(request: Request):
     }
     """
     document_id = None
-    driver = None
     
     try:
         # Parse and validate request
@@ -264,13 +270,13 @@ def orchestrate(request: Request):
             update_document_status(document_id, "failed", error=f"Failed to chunk text: {str(e)}")
             return jsonify({"error": f"Failed to chunk text: {str(e)}"}), 500
         
-        # Process with Neo4j - PROPER RESOURCE MANAGEMENT
+        # Process with Neo4j HTTP API
         try:
-            logger.info("Creating Neo4j driver...")
-            driver = get_neo4j_driver(PROJECT_ID)
+            logger.info("Creating Neo4j HTTP client...")
+            client = create_neo4j_http_client(PROJECT_ID)
             
             # Process chunks to Neo4j
-            process_chunks_to_neo4j(document_id, title, chunks, driver)
+            process_chunks_to_neo4j(document_id, title, chunks, client)
             
             logger.info(f"Successfully stored {len(chunks)} chunks in Neo4j")
             
@@ -278,15 +284,6 @@ def orchestrate(request: Request):
             logger.error(f"Neo4j processing failed: {type(e).__name__}: {str(e)}")
             update_document_status(document_id, "failed", error=f"Neo4j error: {str(e)}")
             return jsonify({"error": f"Neo4j processing failed: {str(e)}"}), 500
-            
-        finally:
-            # CRITICAL: Always close the driver
-            if driver:
-                try:
-                    driver.close()
-                    logger.info("Neo4j driver closed successfully")
-                except Exception as e:
-                    logger.error(f"Error closing driver: {str(e)}")
         
         # Update status to completed
         update_document_status(
@@ -299,7 +296,8 @@ def orchestrate(request: Request):
         return jsonify({
             "status": "success",
             "document_id": document_id,
-            "chunks_processed": len(chunks)
+            "chunks_processed": len(chunks),
+            "api_type": "HTTP"
         }), 200
         
     except Exception as e:
@@ -310,11 +308,3 @@ def orchestrate(request: Request):
             update_document_status(document_id, "failed", error=str(e))
         
         return jsonify({"error": f"Processing failed: {str(e)}"}), 500
-        
-    finally:
-        # Extra safety: ensure driver is closed even if exception in finally block above
-        if driver:
-            try:
-                driver.close()
-            except:
-                pass  # Already logged above

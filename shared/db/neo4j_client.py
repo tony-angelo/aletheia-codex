@@ -1,18 +1,26 @@
 """
-Neo4j client with enhanced connection management, retry logic, and monitoring.
+Neo4j HTTP API client for AletheiaCodex.
 
-ENHANCEMENTS:
+This implementation uses Neo4j's HTTP API instead of the Bolt protocol
+to avoid Cloud Run's gRPC proxy incompatibility issues.
+
+RATIONALE:
+- Cloud Run's gRPC proxy is incompatible with Neo4j's Bolt protocol
+- HTTP API bypasses gRPC entirely while maintaining security (HTTPS/TLS)
+- Officially supported by Neo4j as a standard workaround
+- Trade-off: Slightly slower (~50-100ms overhead) but reliable
+
+FEATURES:
 - Exponential backoff retry logic
 - Connection timeout handling
-- AuraDB sleep mode detection
-- Connection health monitoring
+- Comprehensive error handling
 - Secret caching for performance
+- Detailed logging
 """
 
-from neo4j import GraphDatabase, Driver
-from neo4j.exceptions import ServiceUnavailable, SessionExpired, TransientError
+import requests
 from google.cloud import secretmanager
-from typing import Optional, Dict
+from typing import Optional, Dict, Any, List
 import os
 import logging
 import time
@@ -29,7 +37,7 @@ SECRET_CACHE_TTL = 300  # 5 minutes
 MAX_CONNECTION_RETRIES = 3
 INITIAL_RETRY_DELAY = 2  # seconds
 MAX_RETRY_DELAY = 10  # seconds
-CONNECTION_TIMEOUT = 30  # seconds
+REQUEST_TIMEOUT = 30  # seconds
 
 
 def get_secret(project_id: str, secret_id: str, version: str = "latest", use_cache: bool = True) -> str:
@@ -87,116 +95,183 @@ def clear_secret_cache():
     logger.info("Secret cache cleared")
 
 
-def create_neo4j_driver(project_id: str = "aletheia-codex-prod", max_retries: int = MAX_CONNECTION_RETRIES) -> Driver:
+def convert_uri_to_http(uri: str) -> str:
     """
-    Create a new Neo4j driver instance with retry logic.
-    
-    This function ALWAYS creates a fresh driver to avoid caching issues.
-    Implements exponential backoff for transient connection failures.
+    Convert Neo4j Bolt URI to HTTP endpoint.
     
     Args:
-        project_id: GCP project ID
-        max_retries: Maximum number of connection attempts
+        uri: Neo4j URI (e.g., neo4j+s://xxx.databases.neo4j.io:7687)
         
     Returns:
-        Initialized Neo4j driver
+        HTTP endpoint URL (e.g., https://xxx.databases.neo4j.io)
+    """
+    # Convert neo4j+s:// to https://
+    if uri.startswith('neo4j+s://'):
+        http_uri = uri.replace('neo4j+s://', 'https://')
+    elif uri.startswith('neo4j://'):
+        http_uri = uri.replace('neo4j://', 'http://')
+    else:
+        http_uri = uri
+    
+    # Remove port if present (HTTP API uses standard HTTPS port)
+    if ':7687' in http_uri:
+        http_uri = http_uri.replace(':7687', '')
+    
+    return http_uri
+
+
+def execute_neo4j_query_http(
+    uri: str,
+    user: str,
+    password: str,
+    query: str,
+    parameters: Dict[str, Any] = None,
+    database: str = "neo4j",
+    max_retries: int = MAX_CONNECTION_RETRIES
+) -> Dict[str, Any]:
+    """
+    Execute Cypher query via Neo4j HTTP API.
+    
+    Args:
+        uri: Neo4j URI (will be converted to HTTPS)
+        user: Neo4j username
+        password: Neo4j password
+        query: Cypher query string
+        parameters: Query parameters
+        database: Database name (default: neo4j)
+        max_retries: Maximum retry attempts
+        
+    Returns:
+        Query results as dictionary
         
     Raises:
-        Exception if connection fails after all retries
+        Exception if query fails after all retries
     """
+    # Convert URI to HTTP endpoint
+    http_uri = convert_uri_to_http(uri)
+    
+    # Build endpoint URL
+    endpoint = f"{http_uri}/db/{database}/tx/commit"
+    
+    # Prepare request payload
+    payload = {
+        "statements": [{
+            "statement": query,
+            "parameters": parameters or {}
+        }]
+    }
+    
+    # Execute request with retry logic
     delay = INITIAL_RETRY_DELAY
     last_exception = None
     
     for attempt in range(max_retries):
         try:
-            logger.info(f"Creating Neo4j driver (attempt {attempt + 1}/{max_retries})...")
+            logger.info(f"Executing Neo4j HTTP query (attempt {attempt + 1}/{max_retries})")
+            logger.debug(f"Endpoint: {endpoint}")
+            logger.debug(f"Query: {query[:100]}...")  # Log first 100 chars
             
-            # Retrieve credentials (with caching)
-            uri = get_secret(project_id, "NEO4J_URI")
-            user = get_secret(project_id, "NEO4J_USER")
-            password = get_secret(project_id, "NEO4J_PASSWORD")
-            
-            # Log connection details (without sensitive data)
-            logger.info(f"Connecting to Neo4j:")
-            logger.info(f"  URI: {uri}")
-            logger.info(f"  User: {user}")
-            logger.info(f"  Password length: {len(password)}")
-            
-            # Ensure credentials are clean strings (no hidden characters)
-            uri_clean = str(uri).strip()
-            user_clean = str(user).strip()
-            password_clean = str(password).strip()
-            
-            logger.info(f"After cleaning - URI: {len(uri_clean)}, User: {len(user_clean)}, Password: {len(password_clean)}")
-            
-            # Create driver with timeout configuration
-            driver = GraphDatabase.driver(
-                uri_clean, 
-                auth=(user_clean, password_clean),
-                connection_timeout=CONNECTION_TIMEOUT,
-                max_connection_lifetime=3600,  # 1 hour
-                max_connection_pool_size=50,
-                connection_acquisition_timeout=60
+            response = requests.post(
+                endpoint,
+                auth=(user, password),
+                json=payload,
+                timeout=REQUEST_TIMEOUT,
+                headers={'Content-Type': 'application/json'}
             )
             
-            # Verify connectivity immediately
-            logger.info("Verifying Neo4j connectivity...")
-            driver.verify_connectivity()
-            logger.info("✓ Neo4j connection verified successfully")
+            response.raise_for_status()
+            result = response.json()
             
-            return driver
+            # Check for Neo4j errors in response
+            if 'errors' in result and result['errors']:
+                error_msg = result['errors'][0].get('message', 'Unknown error')
+                error_code = result['errors'][0].get('code', 'Unknown code')
+                raise Exception(f"Neo4j query error [{error_code}]: {error_msg}")
             
-        except (ServiceUnavailable, SessionExpired, TransientError) as e:
+            logger.info("✓ Neo4j HTTP query executed successfully")
+            return result
+            
+        except requests.exceptions.Timeout as e:
             last_exception = e
+            logger.error(f"Request timeout (attempt {attempt + 1}): {e}")
             if attempt < max_retries - 1:
-                logger.warning(
-                    f"Transient connection error (attempt {attempt + 1}/{max_retries}): "
-                    f"{type(e).__name__}: {str(e)}. Retrying in {delay}s..."
-                )
-                
-                # Check if this might be AuraDB sleep mode
-                if "ServiceUnavailable" in str(type(e).__name__):
-                    logger.warning(
-                        "This might be AuraDB free tier sleep mode. "
-                        "The database may need time to wake up."
-                    )
-                
+                logger.warning(f"Retrying in {delay}s...")
                 time.sleep(delay)
-                delay = min(delay * 2, MAX_RETRY_DELAY)  # Exponential backoff with cap
+                delay = min(delay * 2, MAX_RETRY_DELAY)
             else:
-                logger.error(f"All {max_retries} connection attempts failed")
-                raise
+                raise Exception(f"Query failed after {max_retries} attempts: Timeout")
                 
-        except Exception as e:
-            logger.error(f"Failed to create Neo4j driver: {type(e).__name__}: {str(e)}")
-            raise
+        except requests.exceptions.HTTPError as e:
+            last_exception = e
+            status_code = e.response.status_code if e.response else 'unknown'
+            logger.error(f"HTTP error {status_code} (attempt {attempt + 1}): {e}")
+            
+            # Don't retry on authentication errors (401) or bad requests (400)
+            if status_code in [400, 401, 403]:
+                raise Exception(f"HTTP {status_code}: {e}")
+            
+            if attempt < max_retries - 1:
+                logger.warning(f"Retrying in {delay}s...")
+                time.sleep(delay)
+                delay = min(delay * 2, MAX_RETRY_DELAY)
+            else:
+                raise Exception(f"Query failed after {max_retries} attempts: HTTP {status_code}")
+                
+        except requests.exceptions.RequestException as e:
+            last_exception = e
+            logger.error(f"HTTP request failed (attempt {attempt + 1}): {e}")
+            if attempt < max_retries - 1:
+                logger.warning(f"Retrying in {delay}s...")
+                time.sleep(delay)
+                delay = min(delay * 2, MAX_RETRY_DELAY)
+            else:
+                raise Exception(f"Query failed after {max_retries} attempts: {e}")
     
     # Should never reach here, but just in case
     if last_exception:
         raise last_exception
+    raise Exception("Max retries exceeded")
 
 
-def get_neo4j_driver(project_id: str = "aletheia-codex-prod") -> Driver:
+def create_neo4j_http_client(project_id: str = "aletheia-codex-prod") -> Dict[str, str]:
     """
-    Get a Neo4j driver instance.
-    
-    NOTE: This creates a NEW driver on each call to avoid caching issues.
-    Caller is responsible for closing the driver when done.
+    Create Neo4j HTTP client configuration.
     
     Args:
         project_id: GCP project ID
         
     Returns:
-        Initialized Neo4j driver
+        Dictionary with uri, user, password
     """
-    return create_neo4j_driver(project_id)
+    try:
+        uri = get_secret(project_id, "NEO4J_URI")
+        user = get_secret(project_id, "NEO4J_USER")
+        password = get_secret(project_id, "NEO4J_PASSWORD")
+        
+        logger.info(f"Created Neo4j HTTP client configuration")
+        logger.info(f"  URI: {uri}")
+        logger.info(f"  User: {user}")
+        logger.info(f"  Password length: {len(password)}")
+        
+        return {
+            'uri': uri,
+            'user': user,
+            'password': password
+        }
+    except Exception as e:
+        logger.error(f"Failed to create Neo4j HTTP client: {e}")
+        raise
 
 
-def execute_query(cypher: str, parameters: dict = None, project_id: str = "aletheia-codex-prod") -> list:
+def execute_query(
+    cypher: str, 
+    parameters: dict = None, 
+    project_id: str = "aletheia-codex-prod"
+) -> List[Dict[str, Any]]:
     """
     Execute a Cypher query and return results.
     
-    This function manages the driver lifecycle automatically.
+    This is a convenience function that manages client configuration automatically.
     
     Args:
         cypher: Cypher query string
@@ -206,20 +281,34 @@ def execute_query(cypher: str, parameters: dict = None, project_id: str = "aleth
     Returns:
         List of result records
     """
-    driver = None
     try:
-        driver = get_neo4j_driver(project_id)
-        with driver.session() as session:
-            result = session.run(cypher, parameters or {})
-            return [record.data() for record in result]
-    finally:
-        if driver:
-            driver.close()
+        client = create_neo4j_http_client(project_id)
+        result = execute_neo4j_query_http(
+            client['uri'],
+            client['user'],
+            client['password'],
+            cypher,
+            parameters
+        )
+        
+        # Extract records from HTTP response
+        records = []
+        if 'results' in result and result['results']:
+            for row in result['results'][0].get('data', []):
+                # Extract the row data
+                if 'row' in row and row['row']:
+                    records.append(row['row'][0] if len(row['row']) == 1 else row['row'])
+        
+        return records
+        
+    except Exception as e:
+        logger.error(f"Query execution failed: {e}")
+        raise
 
 
 def test_connection(project_id: str = "aletheia-codex-prod") -> dict:
     """
-    Test Neo4j connection and return diagnostics.
+    Test Neo4j HTTP API connection and return diagnostics.
     
     Args:
         project_id: GCP project ID
@@ -233,29 +322,39 @@ def test_connection(project_id: str = "aletheia-codex-prod") -> dict:
         "details": {}
     }
     
-    driver = None
     start_time = time.time()
     
     try:
-        logger.info("Testing Neo4j connection...")
-        driver = get_neo4j_driver(project_id)
+        logger.info("Testing Neo4j HTTP API connection...")
+        client = create_neo4j_http_client(project_id)
         
         # Run a simple query
-        with driver.session() as session:
-            test_result = session.run("RETURN 1 as test").single()
-            if test_result["test"] == 1:
+        query_result = execute_neo4j_query_http(
+            client['uri'],
+            client['user'],
+            client['password'],
+            "RETURN 1 as test"
+        )
+        
+        # Verify result structure
+        if 'results' in query_result and query_result['results']:
+            data = query_result['results'][0]['data']
+            if data and data[0]['row'][0] == 1:
                 elapsed = time.time() - start_time
                 result["success"] = True
                 result["message"] = "Connection successful"
                 result["details"] = {
                     "connection_time": f"{elapsed:.2f}s",
-                    "driver_verified": True,
-                    "query_executed": True
+                    "api_type": "HTTP",
+                    "query_executed": True,
+                    "endpoint": convert_uri_to_http(client['uri'])
                 }
                 logger.info(f"✓ Connection test passed ({elapsed:.2f}s)")
             else:
                 result["message"] = "Query returned unexpected result"
-                
+        else:
+            result["message"] = "Invalid response structure"
+            
     except Exception as e:
         elapsed = time.time() - start_time
         result["message"] = f"Connection failed: {str(e)}"
@@ -265,54 +364,51 @@ def test_connection(project_id: str = "aletheia-codex-prod") -> dict:
             "elapsed_time": f"{elapsed:.2f}s"
         }
         logger.error(f"✗ Connection test failed: {str(e)}")
-        
-    finally:
-        if driver:
-            try:
-                driver.close()
-            except:
-                pass
     
     return result
 
 
 # Context manager for better resource management
-class Neo4jConnection:
-    """Context manager for Neo4j connections with automatic cleanup."""
+class Neo4jHTTPConnection:
+    """Context manager for Neo4j HTTP connections."""
     
     def __init__(self, project_id: str = "aletheia-codex-prod"):
         self.project_id = project_id
-        self.driver = None
+        self.client = None
     
-    def __enter__(self) -> Driver:
-        self.driver = get_neo4j_driver(self.project_id)
-        return self.driver
+    def __enter__(self) -> Dict[str, str]:
+        self.client = create_neo4j_http_client(self.project_id)
+        return self.client
     
     def __exit__(self, exc_type, exc_val, exc_tb):
-        if self.driver:
-            try:
-                self.driver.close()
-                logger.debug("Neo4j driver closed via context manager")
-            except Exception as e:
-                logger.error(f"Error closing driver in context manager: {str(e)}")
+        # HTTP connections don't need explicit cleanup
+        logger.debug("Neo4j HTTP connection context closed")
         return False
 
 
 # Usage examples:
 # 
 # Example 1: Using context manager (recommended)
-# with Neo4jConnection() as driver:
-#     with driver.session() as session:
-#         result = session.run("RETURN 1")
+# with Neo4jHTTPConnection() as client:
+#     result = execute_neo4j_query_http(
+#         client['uri'],
+#         client['user'],
+#         client['password'],
+#         "RETURN 1"
+#     )
 #
-# Example 2: Manual management
-# driver = get_neo4j_driver()
-# try:
-#     with driver.session() as session:
-#         result = session.run("RETURN 1")
-# finally:
-#     driver.close()
+# Example 2: Direct execution
+# client = create_neo4j_http_client()
+# result = execute_neo4j_query_http(
+#     client['uri'],
+#     client['user'],
+#     client['password'],
+#     "MATCH (n:User) RETURN n LIMIT 1"
+# )
 #
-# Example 3: Test connection
+# Example 3: Convenience function
+# records = execute_query("MATCH (n:User) RETURN n LIMIT 1")
+#
+# Example 4: Test connection
 # result = test_connection()
 # print(result)
