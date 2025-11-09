@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { Timestamp } from 'firebase/firestore';
+import { getAuth } from 'firebase/auth';
 import { orchestrationService, ProcessingProgress, ProcessingResult } from '../services/orchestration';
 import { updateNoteStatus } from '../services/notes';
 
@@ -34,6 +35,14 @@ export const useProcessing = (): UseProcessingReturn => {
         startTime: Date.now()
       });
 
+      // Get Firebase Auth token
+      const auth = getAuth();
+      const user = auth.currentUser;
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+      const authToken = await user.getIdToken();
+
       // Update note status to processing
       await updateNoteStatus(noteId, {
         status: 'processing',
@@ -45,6 +54,7 @@ export const useProcessing = (): UseProcessingReturn => {
         noteId,
         content,
         userId,
+        authToken,
         (progressUpdate) => {
           setProgress(progressUpdate);
         }

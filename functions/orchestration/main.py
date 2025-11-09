@@ -19,11 +19,19 @@ FEATURES:
 import functions_framework
 from flask import Request, jsonify
 from google.cloud import firestore, storage
+from firebase_admin import auth, initialize_app
 import os
 import json
 import time
 from typing import Optional, Tuple, List, Dict, Any
 import asyncio
+
+# Initialize Firebase Admin
+try:
+    initialize_app()
+except ValueError:
+    # Already initialized
+    pass
 
 from shared.db.firestore_client import get_firestore_client
 from shared.db.neo4j_client import (
@@ -314,6 +322,26 @@ async def populate_knowledge_graph(
         raise
 
 
+def verify_auth_token(request: Request) -> Optional[str]:
+    """
+    Verify Firebase Auth token from Authorization header.
+    
+    Returns:
+        User ID if token is valid, None otherwise
+    """
+    auth_header = request.headers.get('Authorization', '')
+    if not auth_header.startswith('Bearer '):
+        return None
+    
+    token = auth_header.replace('Bearer ', '')
+    try:
+        decoded_token = auth.verify_id_token(token)
+        return decoded_token['uid']
+    except Exception as e:
+        logger.error(f"Token verification failed: {str(e)}")
+        return None
+
+
 @functions_framework.http
 def orchestrate(request: Request):
     """
@@ -331,11 +359,18 @@ def orchestrate(request: Request):
         "content": "note text content",
         "userId": "user-id"
     }
+    
+    Requires Authorization header with Firebase Auth token.
     """
     document_id = None
     note_id = None
     
     try:
+        # Verify authentication
+        authenticated_user_id = verify_auth_token(request)
+        if not authenticated_user_id:
+            return jsonify({"error": "Unauthorized - Invalid or missing authentication token"}), 401
+        
         # Parse and validate request
         data = request.get_json(silent=True)
         if not data:
@@ -345,12 +380,22 @@ def orchestrate(request: Request):
         note_id = data.get("noteId")
         user_id = data.get("userId") or data.get("user_id")
         
+        # Verify the authenticated user matches the requested user
+        if user_id and user_id != authenticated_user_id:
+            return jsonify({
+                "error": "Forbidden - Cannot process notes for other users"
+            }), 403
+        
+        # Use authenticated user ID if not provided
+        if not user_id:
+            user_id = authenticated_user_id
+        
         if note_id:
             # Note mode - content is provided directly
             content = data.get("content")
-            if not content or not user_id:
+            if not content:
                 return jsonify({
-                    "error": "Invalid payload. Expected noteId, content, and userId"
+                    "error": "Invalid payload. Expected noteId and content"
                 }), 400
             
             logger.info(f"Processing note: {note_id} for user: {user_id}")

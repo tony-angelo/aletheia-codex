@@ -9,6 +9,7 @@ Provides REST API for note management and processing.
 import functions_framework
 from flask import Request, jsonify
 from google.cloud import firestore
+from firebase_admin import auth, initialize_app
 import os
 from typing import Optional, Dict, Any
 from datetime import datetime
@@ -17,6 +18,13 @@ import logging
 
 logger = logging.getLogger("notes_api")
 logger.setLevel(logging.INFO)
+
+# Initialize Firebase Admin
+try:
+    initialize_app()
+except ValueError:
+    # Already initialized
+    pass
 
 PROJECT_ID = os.environ.get("GCP_PROJECT", "aletheia-codex-prod")
 
@@ -28,7 +36,7 @@ def get_firestore_client():
 
 def verify_user_auth(request: Request) -> Optional[str]:
     """
-    Verify user authentication from request headers.
+    Verify user authentication from Firebase Auth token.
     
     Args:
         request: Flask request object
@@ -36,20 +44,19 @@ def verify_user_auth(request: Request) -> Optional[str]:
     Returns:
         User ID if authenticated, None otherwise
     """
-    # In production, this would verify Firebase Auth token
-    # For now, we'll use a simple header-based auth
-    auth_header = request.headers.get("Authorization")
+    auth_header = request.headers.get("Authorization", "")
     
-    if not auth_header:
+    if not auth_header.startswith("Bearer "):
         return None
     
-    # Extract user ID from Bearer token
-    # Format: "Bearer <user_id>"
-    parts = auth_header.split(" ")
-    if len(parts) != 2 or parts[0] != "Bearer":
-        return None
+    token = auth_header.replace("Bearer ", "")
     
-    return parts[1]
+    try:
+        decoded_token = auth.verify_id_token(token)
+        return decoded_token['uid']
+    except Exception as e:
+        logger.error(f"Token verification failed: {str(e)}")
+        return None
 
 
 @functions_framework.http

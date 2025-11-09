@@ -44,6 +44,7 @@ class OrchestrationService {
     noteId: string,
     content: string,
     userId: string,
+    authToken: string,
     onProgress?: (progress: ProcessingProgress) => void
   ): Promise<ProcessingResult> {
     try {
@@ -62,6 +63,7 @@ class OrchestrationService {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`,
         },
         body: JSON.stringify({
           noteId,
