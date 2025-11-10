@@ -23,7 +23,12 @@ from shared.utils.logging import get_logger
 logger = get_logger(__name__)
 
 PROJECT_ID = os.environ.get("GCP_PROJECT", "aletheia-codex-prod")
-CORS_ORIGINS = os.environ.get('CORS_ORIGINS', 'http://localhost:3000,https://aletheia-codex-prod.web.app').split(',')
+
+# CORS configuration
+ALLOWED_ORIGINS = [
+    'https://aletheia-codex-prod.web.app',
+    'http://localhost:3000'
+]
 
 
 def get_firestore_client():
@@ -33,7 +38,7 @@ def get_firestore_client():
 
 def add_cors_headers(response, origin):
     """Add CORS headers to response."""
-    if origin in CORS_ORIGINS:
+    if origin in ALLOWED_ORIGINS:
         response.headers['Access-Control-Allow-Origin'] = origin
         response.headers['Access-Control-Allow-Methods'] = 'GET, POST, DELETE, OPTIONS'
         response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'

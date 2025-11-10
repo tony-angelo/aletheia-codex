@@ -2,7 +2,7 @@
 
 import { getAuthHeaders, handleAuthError } from '../utils/auth';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://review-api-h55nns6ojq-uc.a.run.app';
+const API_BASE_URL = process.env.REACT_APP_API_URL || '/api/review';
 
 export interface ApiResponse<T = any> {
   success: boolean;

@@ -27,9 +27,14 @@ def require_auth(f):
     2. Verifies the Firebase ID token
     3. Adds user_id to the request object
     4. Returns 401 if authentication fails
+    5. Allows OPTIONS requests (CORS preflight) without authentication
     """
     @wraps(f)
     def decorated_function(request):
+        # Allow OPTIONS requests (CORS preflight) without authentication
+        if request.method == 'OPTIONS':
+            return f(request)
+        
         # Get Authorization header
         auth_header = request.headers.get('Authorization')
         

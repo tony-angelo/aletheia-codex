@@ -1,7 +1,6 @@
 import { getAuthHeaders, handleAuthError } from '../utils/auth';
 
-const GRAPH_API_URL = process.env.REACT_APP_GRAPH_API_URL || 
-  'https://us-central1-aletheia-codex-prod.cloudfunctions.net/graph-function';
+const GRAPH_API_URL = process.env.REACT_APP_GRAPH_API_URL || '/api/graph';
 
 export interface GraphNode {
   id: string;
