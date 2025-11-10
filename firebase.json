@@ -33,8 +33,43 @@
     ],
     "rewrites": [
       {
+        "source": "/api/review/**",
+        "function": "review-api-function"
+      },
+      {
+        "source": "/api/graph/**",
+        "function": "graph-function"
+      },
+      {
+        "source": "/api/notes/**",
+        "function": "notes-api-function"
+      },
+      {
         "source": "**",
         "destination": "/index.html"
+      }
+    ],
+    "headers": [
+      {
+        "source": "/api/**",
+        "headers": [
+          {
+            "key": "Access-Control-Allow-Origin",
+            "value": "https://aletheia-codex-prod.web.app"
+          },
+          {
+            "key": "Access-Control-Allow-Methods",
+            "value": "GET, POST, PUT, DELETE, OPTIONS"
+          },
+          {
+            "key": "Access-Control-Allow-Headers",
+            "value": "Content-Type, Authorization"
+          },
+          {
+            "key": "Access-Control-Max-Age",
+            "value": "3600"
+          }
+        ]
       }
     ]
   },

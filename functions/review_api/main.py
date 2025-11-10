@@ -121,17 +121,18 @@ def handle_request(request: Request) -> flask.Response:
         path = request.path.strip('/')
         
         # Route to appropriate handler
-        if path == 'review/pending' and request.method == 'GET':
+        # Handle both full path (direct call) and stripped path (Firebase Hosting rewrite)
+        if (path == 'review/pending' or path == 'pending') and request.method == 'GET':
             return handle_get_pending_items(request, user_id, origin)
-        elif path == 'review/approve' and request.method == 'POST':
+        elif (path == 'review/approve' or path == 'approve') and request.method == 'POST':
             return handle_approve_item(request, user_id, origin)
-        elif path == 'review/reject' and request.method == 'POST':
+        elif (path == 'review/reject' or path == 'reject') and request.method == 'POST':
             return handle_reject_item(request, user_id, origin)
-        elif path == 'review/batch-approve' and request.method == 'POST':
+        elif (path == 'review/batch-approve' or path == 'batch-approve') and request.method == 'POST':
             return handle_batch_approve_items(request, user_id, origin)
-        elif path == 'review/batch-reject' and request.method == 'POST':
+        elif (path == 'review/batch-reject' or path == 'batch-reject') and request.method == 'POST':
             return handle_batch_reject_items(request, user_id, origin)
-        elif path == 'review/stats' and request.method == 'GET':
+        elif (path == 'review/stats' or path == 'stats') and request.method == 'GET':
             return handle_get_user_stats(request, user_id, origin)
         else:
             return cors_response({
