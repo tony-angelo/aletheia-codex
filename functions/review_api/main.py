@@ -31,6 +31,12 @@ logger = get_logger(__name__)
 # Configuration
 PROJECT_ID = os.environ.get('GCP_PROJECT', 'aletheia-codex-prod')
 
+# CORS configuration
+ALLOWED_ORIGINS = [
+    'https://aletheia-codex-prod.web.app',
+    'http://localhost:3000'
+]
+
 # Initialize managers (lazy initialization)
 _queue_manager = None
 _approval_workflow = None
@@ -61,18 +67,26 @@ def get_batch_processor():
     return _batch_processor
 
 
-def cors_response(response_data: Dict[str, Any], status_code: int = 200):
+def add_cors_headers(response, origin):
+    """Add CORS headers to response."""
+    if origin in ALLOWED_ORIGINS:
+        response.headers['Access-Control-Allow-Origin'] = origin
+        response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS'
+        response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
+        response.headers['Access-Control-Max-Age'] = '3600'
+    return response
+
+
+def cors_response(response_data: Dict[str, Any], status_code: int = 200, origin: str = None):
     """Create response with CORS headers."""
     import json
     
     response_data_str = json.dumps(response_data)
     response = flask.Response(response=response_data_str, status=status_code, mimetype='application/json')
     
-    # Add CORS headers
-    response.headers['Access-Control-Allow-Origin'] = '*'
-    response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS'
-    response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization, X-Requested-With'
-    response.headers['Access-Control-Max-Age'] = '3600'
+    # Add CORS headers if origin is provided
+    if origin:
+        response = add_cors_headers(response, origin)
     
     return response
 
@@ -91,6 +105,12 @@ def handle_request(request: Request) -> flask.Response:
     - POST /review/batch-reject - Batch reject items
     - GET /review/stats - Get user statistics
     """
+    origin = request.headers.get('Origin')
+    
+    # Handle CORS preflight
+    if request.method == 'OPTIONS':
+        response = jsonify({'status': 'ok'})
+        return add_cors_headers(response, origin)
     
     try:
         # Get authenticated user ID (set by @require_auth decorator)
@@ -102,17 +122,17 @@ def handle_request(request: Request) -> flask.Response:
         
         # Route to appropriate handler
         if path == 'review/pending' and request.method == 'GET':
-            return handle_get_pending_items(request, user_id)
+            return handle_get_pending_items(request, user_id, origin)
         elif path == 'review/approve' and request.method == 'POST':
-            return handle_approve_item(request, user_id)
+            return handle_approve_item(request, user_id, origin)
         elif path == 'review/reject' and request.method == 'POST':
-            return handle_reject_item(request, user_id)
+            return handle_reject_item(request, user_id, origin)
         elif path == 'review/batch-approve' and request.method == 'POST':
-            return handle_batch_approve_items(request, user_id)
+            return handle_batch_approve_items(request, user_id, origin)
         elif path == 'review/batch-reject' and request.method == 'POST':
-            return handle_batch_reject_items(request, user_id)
+            return handle_batch_reject_items(request, user_id, origin)
         elif path == 'review/stats' and request.method == 'GET':
-            return handle_get_user_stats(request, user_id)
+            return handle_get_user_stats(request, user_id, origin)
         else:
             return cors_response({
                 'success': False,
@@ -120,7 +140,7 @@ def handle_request(request: Request) -> flask.Response:
                     'code': 'NOT_FOUND',
                     'message': f'Endpoint not found: {request.method} {path}'
                 }
-            }, 404)
+            }, 404, origin)
     
     except Exception as e:
         logger.error(f"Unhandled error in request handler: {str(e)}", exc_info=True)
@@ -130,10 +150,10 @@ def handle_request(request: Request) -> flask.Response:
                 'code': 'INTERNAL_ERROR',
                 'message': f'An internal error occurred: {str(e)}'
             }
-        }, 500)
+        }, 500, origin)
 
 
-def handle_get_pending_items(request: Request, user_id: str) -> flask.Response:
+def handle_get_pending_items(request: Request, user_id: str, origin: str = None) -> flask.Response:
     """
     Handle GET /review/pending requests.
     
@@ -166,7 +186,7 @@ def handle_get_pending_items(request: Request, user_id: str) -> flask.Response:
                         'code': 'INVALID_PARAMETER',
                         'message': 'Invalid type parameter. Must be "entity" or "relationship"'
                     }
-                }, 400)
+                }, 400, origin)
         
         # Get pending items
         queue_manager = get_queue_manager()
@@ -195,7 +215,7 @@ def handle_get_pending_items(request: Request, user_id: str) -> flask.Response:
                     'descending': descending
                 }
             }
-        })
+        }, origin)
         
     except ValueError as e:
         logger.error(f"Invalid parameter in get_pending_items: {str(e)}")
@@ -205,7 +225,7 @@ def handle_get_pending_items(request: Request, user_id: str) -> flask.Response:
                 'code': 'INVALID_PARAMETER',
                 'message': str(e)
             }
-        }, 400)
+        }, 400, origin)
     except Exception as e:
         logger.error(f"Error getting pending items: {str(e)}", exc_info=True)
         return cors_response({
@@ -214,10 +234,10 @@ def handle_get_pending_items(request: Request, user_id: str) -> flask.Response:
                 'code': 'INTERNAL_ERROR',
                 'message': 'Failed to get pending items'
             }
-        }, 500)
+        }, 500, origin)
 
 
-def handle_approve_item(request: Request, user_id: str) -> flask.Response:
+def handle_approve_item(request: Request, user_id: str, origin: str = None) -> flask.Response:
     """
     Handle POST /review/approve requests.
     
@@ -236,7 +256,7 @@ def handle_approve_item(request: Request, user_id: str) -> flask.Response:
                     'code': 'INVALID_REQUEST',
                     'message': 'Missing required field: item_id'
                 }
-            }, 400)
+            }, 400, origin)
         
         item_id = data['item_id']
         if not item_id or not item_id.strip():
@@ -246,7 +266,7 @@ def handle_approve_item(request: Request, user_id: str) -> flask.Response:
                     'code': 'INVALID_REQUEST',
                     'message': 'item_id cannot be empty'
                 }
-            }, 400)
+            }, 400, origin)
         
         # Get item and verify user owns it (SECURITY CHECK)
         queue_manager = get_queue_manager()
@@ -259,7 +279,7 @@ def handle_approve_item(request: Request, user_id: str) -> flask.Response:
                     'code': 'NOT_FOUND',
                     'message': 'Review item not found'
                 }
-            }, 404)
+            }, 404, origin)
         
         # Verify user owns this item
         if item.user_id != user_id:
@@ -270,7 +290,7 @@ def handle_approve_item(request: Request, user_id: str) -> flask.Response:
                     'code': 'FORBIDDEN',
                     'message': 'You do not have permission to approve this item'
                 }
-            }, 403)
+            }, 403, origin)
         
         # Approve item
         approval_workflow = get_approval_workflow()
@@ -287,7 +307,7 @@ def handle_approve_item(request: Request, user_id: str) -> flask.Response:
                     'item_id': item_id,
                     'approved_at': datetime.utcnow().isoformat()
                 }
-            })
+            }, origin)
         else:
             return cors_response({
                 'success': False,
@@ -295,7 +315,7 @@ def handle_approve_item(request: Request, user_id: str) -> flask.Response:
                     'code': 'APPROVAL_FAILED',
                     'message': 'Failed to approve item'
                 }
-            }, 500)
+            }, 500, origin)
         
     except Exception as e:
         logger.error(f"Error approving item: {str(e)}", exc_info=True)
@@ -305,10 +325,10 @@ def handle_approve_item(request: Request, user_id: str) -> flask.Response:
                 'code': 'INTERNAL_ERROR',
                 'message': 'Failed to approve item'
             }
-        }, 500)
+        }, 500, origin)
 
 
-def handle_reject_item(request: Request, user_id: str) -> flask.Response:
+def handle_reject_item(request: Request, user_id: str, origin: str = None) -> flask.Response:
     """
     Handle POST /review/reject requests.
     
@@ -328,7 +348,7 @@ def handle_reject_item(request: Request, user_id: str) -> flask.Response:
                     'code': 'INVALID_REQUEST',
                     'message': 'Missing required field: item_id'
                 }
-            }, 400)
+            }, 400, origin)
         
         item_id = data['item_id']
         if not item_id or not item_id.strip():
@@ -338,7 +358,7 @@ def handle_reject_item(request: Request, user_id: str) -> flask.Response:
                     'code': 'INVALID_REQUEST',
                     'message': 'item_id cannot be empty'
                 }
-            }, 400)
+            }, 400, origin)
         
         reason = data.get('reason')
         
@@ -353,7 +373,7 @@ def handle_reject_item(request: Request, user_id: str) -> flask.Response:
                     'code': 'NOT_FOUND',
                     'message': 'Review item not found'
                 }
-            }, 404)
+            }, 404, origin)
         
         # Verify user owns this item
         if item.user_id != user_id:
@@ -364,7 +384,7 @@ def handle_reject_item(request: Request, user_id: str) -> flask.Response:
                     'code': 'FORBIDDEN',
                     'message': 'You do not have permission to reject this item'
                 }
-            }, 403)
+            }, 403, origin)
         
         # Reject item
         approval_workflow = get_approval_workflow()
@@ -382,7 +402,7 @@ def handle_reject_item(request: Request, user_id: str) -> flask.Response:
                     'rejected_at': datetime.utcnow().isoformat(),
                     'reason': reason
                 }
-            })
+            }, origin)
         else:
             return cors_response({
                 'success': False,
@@ -390,7 +410,7 @@ def handle_reject_item(request: Request, user_id: str) -> flask.Response:
                     'code': 'REJECTION_FAILED',
                     'message': 'Failed to reject item'
                 }
-            }, 500)
+            }, 500, origin)
         
     except Exception as e:
         logger.error(f"Error rejecting item: {str(e)}", exc_info=True)
@@ -400,10 +420,10 @@ def handle_reject_item(request: Request, user_id: str) -> flask.Response:
                 'code': 'INTERNAL_ERROR',
                 'message': 'Failed to reject item'
             }
-        }, 500)
+        }, 500, origin)
 
 
-def handle_batch_approve_items(request: Request, user_id: str) -> flask.Response:
+def handle_batch_approve_items(request: Request, user_id: str, origin: str = None) -> flask.Response:
     """
     Handle POST /review/batch-approve requests.
     
@@ -422,7 +442,7 @@ def handle_batch_approve_items(request: Request, user_id: str) -> flask.Response
                     'code': 'INVALID_REQUEST',
                     'message': 'Missing required field: item_ids'
                 }
-            }, 400)
+            }, 400, origin)
         
         item_ids = data['item_ids']
         if not isinstance(item_ids, list) or len(item_ids) == 0:
@@ -432,7 +452,7 @@ def handle_batch_approve_items(request: Request, user_id: str) -> flask.Response
                     'code': 'INVALID_REQUEST',
                     'message': 'item_ids must be a non-empty array'
                 }
-            }, 400)
+            }, 400, origin)
         
         # Batch approve
         batch_processor = get_batch_processor()
@@ -441,7 +461,7 @@ def handle_batch_approve_items(request: Request, user_id: str) -> flask.Response
         return cors_response({
             'success': True,
             'data': result.to_dict()
-        })
+        }, origin)
         
     except Exception as e:
         logger.error(f"Error in batch approve: {str(e)}", exc_info=True)
@@ -451,10 +471,10 @@ def handle_batch_approve_items(request: Request, user_id: str) -> flask.Response
                 'code': 'INTERNAL_ERROR',
                 'message': 'Failed to batch approve items'
             }
-        }, 500)
+        }, 500, origin)
 
 
-def handle_batch_reject_items(request: Request, user_id: str) -> flask.Response:
+def handle_batch_reject_items(request: Request, user_id: str, origin: str = None) -> flask.Response:
     """
     Handle POST /review/batch-reject requests.
     
@@ -474,7 +494,7 @@ def handle_batch_reject_items(request: Request, user_id: str) -> flask.Response:
                     'code': 'INVALID_REQUEST',
                     'message': 'Missing required field: item_ids'
                 }
-            }, 400)
+            }, 400, origin)
         
         item_ids = data['item_ids']
         if not isinstance(item_ids, list) or len(item_ids) == 0:
@@ -484,7 +504,7 @@ def handle_batch_reject_items(request: Request, user_id: str) -> flask.Response:
                     'code': 'INVALID_REQUEST',
                     'message': 'item_ids must be a non-empty array'
                 }
-            }, 400)
+            }, 400, origin)
         
         reason = data.get('reason')
         
@@ -495,7 +515,7 @@ def handle_batch_reject_items(request: Request, user_id: str) -> flask.Response:
         return cors_response({
             'success': True,
             'data': result.to_dict()
-        })
+        }, origin)
         
     except Exception as e:
         logger.error(f"Error in batch reject: {str(e)}", exc_info=True)
@@ -505,10 +525,10 @@ def handle_batch_reject_items(request: Request, user_id: str) -> flask.Response:
                 'code': 'INTERNAL_ERROR',
                 'message': 'Failed to batch reject items'
             }
-        }, 500)
+        }, 500, origin)
 
 
-def handle_get_user_stats(request: Request, user_id: str) -> flask.Response:
+def handle_get_user_stats(request: Request, user_id: str, origin: str = None) -> flask.Response:
     """Handle GET /review/stats requests."""
     try:
         # Get user statistics
@@ -518,7 +538,7 @@ def handle_get_user_stats(request: Request, user_id: str) -> flask.Response:
         return cors_response({
             'success': True,
             'data': stats.to_dict()
-        })
+        }, origin)
         
     except Exception as e:
         logger.error(f"Error getting user stats: {str(e)}", exc_info=True)
@@ -528,4 +548,4 @@ def handle_get_user_stats(request: Request, user_id: str) -> flask.Response:
                 'code': 'INTERNAL_ERROR',
                 'message': 'Failed to get user statistics'
             }
-        }, 500)
+        }, 500, origin)
