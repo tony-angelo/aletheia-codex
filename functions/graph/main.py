@@ -1,20 +1,55 @@
+"""
+Graph API Cloud Function for AletheiaCodex (with Firebase Authentication).
+Provides HTTP endpoints for browsing the knowledge graph.
+
+SPRINT 6: Knowledge Graph API with proper authentication and CORS
+"""
+
 import functions_framework
-from flask import jsonify, request
+from flask import Request, jsonify
+import os
+import sys
+
+# Add shared directory to path
+sys.path.append('/workspace')
+
 from shared.auth.firebase_auth import require_auth
 from shared.db.neo4j_client import execute_query
-import logging
+from shared.utils.logging import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
+
+PROJECT_ID = os.environ.get('GCP_PROJECT', 'aletheia-codex-prod')
+CORS_ORIGINS = os.environ.get('CORS_ORIGINS', 'http://localhost:3000,https://aletheia-codex-prod.web.app').split(',')
+
+
+def add_cors_headers(response, origin):
+    """Add CORS headers to response."""
+    if origin in CORS_ORIGINS:
+        response.headers['Access-Control-Allow-Origin'] = origin
+        response.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
+        response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
+        response.headers['Access-Control-Max-Age'] = '3600'
+    return response
+
 
 @functions_framework.http
 @require_auth  # Require Firebase authentication
-def graph_function(request):
-    """HTTP Cloud Function for graph operations (authenticated)."""
+def graph_function(request: Request):
+    """
+    Main entry point for Graph API (authenticated).
     
-    # CORS headers
-    headers = {
-        'Access-Control-Allow-Origin': '*',
-    }
+    Endpoints:
+    - GET / - List all nodes for user
+    - GET /?nodeId={id} - Get node details
+    - GET /?search=true&query={text} - Search nodes
+    """
+    origin = request.headers.get('Origin')
+    
+    # Handle CORS preflight
+    if request.method == 'OPTIONS':
+        response = jsonify({'status': 'ok'})
+        return add_cors_headers(response, origin)
     
     try:
         # Get authenticated user ID (set by @require_auth decorator)
@@ -23,24 +58,28 @@ def graph_function(request):
         
         # Route based on query parameters
         if request.args.get('search') == 'true':
-            return search_nodes(user_id, request, headers)
+            response = search_nodes(user_id, request)
         elif request.args.get('nodeId'):
             node_id = request.args.get('nodeId')
-            return get_node_details(user_id, node_id, headers)
+            response = get_node_details(user_id, node_id)
         else:
-            return get_nodes(user_id, request, headers)
-            
+            response = get_nodes(user_id, request)
+        
+        return add_cors_headers(response, origin)
+        
     except Exception as e:
-        logger.error(f"Graph function error: {str(e)}", exc_info=True)
-        return (jsonify({'error': str(e)}), 500, headers)
+        logger.error(f"Error in graph function: {str(e)}", exc_info=True)
+        response = jsonify({'error': 'Internal server error'}), 500
+        return add_cors_headers(response, origin)
 
-def get_nodes(user_id: str, request, headers):
-    """Get list of nodes for authenticated user."""
+
+def get_nodes(user_id: str, request: Request):
+    """Get all nodes for user with pagination."""
     limit = int(request.args.get('limit', 50))
     offset = int(request.args.get('offset', 0))
-    node_type = request.args.get('type')  # Optional filter by type
+    node_type = request.args.get('type', None)
     
-    # Build query
+    # Build query - only return nodes owned by user
     query = """
     MATCH (u:User {userId: $userId})-[:OWNS]->(n)
     """
@@ -71,10 +110,16 @@ def get_nodes(user_id: str, request, headers):
         node_data['id'] = record['id']
         nodes.append(node_data)
     
-    return (jsonify({'nodes': nodes, 'total': len(nodes)}), 200, headers)
+    return jsonify({
+        'nodes': nodes,
+        'total': len(nodes),
+        'offset': offset,
+        'limit': limit
+    })
 
-def get_node_details(user_id: str, node_id: str, headers):
-    """Get detailed information about a node."""
+
+def get_node_details(user_id: str, node_id: str):
+    """Get detailed information about a specific node."""
     
     # Get node with relationships - verify user owns it
     query = """
@@ -103,7 +148,7 @@ def get_node_details(user_id: str, node_id: str, headers):
     )
     
     if not result:
-        return (jsonify({'error': 'Node not found'}), 404, headers)
+        return jsonify({'error': 'Node not found'}), 404
     
     record = result[0]
     node_data = dict(record['n'])
@@ -111,13 +156,14 @@ def get_node_details(user_id: str, node_id: str, headers):
     node_data['id'] = record['id']
     node_data['relationships'] = record['relationships']
     
-    return (jsonify(node_data), 200, headers)
+    return jsonify(node_data)
 
-def search_nodes(user_id: str, request, headers):
+
+def search_nodes(user_id: str, request: Request):
     """Search nodes by name or properties."""
     query_text = request.args.get('query', '')
     if not query_text:
-        return (jsonify({'error': 'query parameter required'}), 400, headers)
+        return jsonify({'error': 'query parameter required'}), 400
     
     # Search by name (case-insensitive) - only user's nodes
     query = """
@@ -143,4 +189,7 @@ def search_nodes(user_id: str, request, headers):
         node_data['id'] = record['id']
         nodes.append(node_data)
     
-    return (jsonify({'nodes': nodes, 'total': len(nodes)}), 200, headers)
+    return jsonify({
+        'nodes': nodes,
+        'total': len(nodes)
+    })

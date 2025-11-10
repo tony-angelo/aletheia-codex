@@ -1,32 +1,29 @@
 """
-AletheiaCodex - Notes API Function
+AletheiaCodex - Notes API Function (with Firebase Authentication)
 Handles note operations: create, list, delete, and process notes.
 
-SPRINT 4: Note Input & AI Processing
+SPRINT 6: Updated to use shared Firebase authentication middleware
 Provides REST API for note management and processing.
 """
 
 import functions_framework
 from flask import Request, jsonify
 from google.cloud import firestore
-from firebase_admin import auth, initialize_app
 import os
-from typing import Optional, Dict, Any
+import sys
+from typing import Dict, Any
 from datetime import datetime
 
-import logging
+# Add shared directory to path
+sys.path.append('/workspace')
 
-logger = logging.getLogger("notes_api")
-logger.setLevel(logging.INFO)
+from shared.auth.firebase_auth import require_auth
+from shared.utils.logging import get_logger
 
-# Initialize Firebase Admin
-try:
-    initialize_app()
-except ValueError:
-    # Already initialized
-    pass
+logger = get_logger(__name__)
 
 PROJECT_ID = os.environ.get("GCP_PROJECT", "aletheia-codex-prod")
+CORS_ORIGINS = os.environ.get('CORS_ORIGINS', 'http://localhost:3000,https://aletheia-codex-prod.web.app').split(',')
 
 
 def get_firestore_client():
@@ -34,82 +31,61 @@ def get_firestore_client():
     return firestore.Client(project=PROJECT_ID)
 
 
-def verify_user_auth(request: Request) -> Optional[str]:
-    """
-    Verify user authentication from Firebase Auth token.
-    
-    Args:
-        request: Flask request object
-        
-    Returns:
-        User ID if authenticated, None otherwise
-    """
-    auth_header = request.headers.get("Authorization", "")
-    
-    if not auth_header.startswith("Bearer "):
-        return None
-    
-    token = auth_header.replace("Bearer ", "")
-    
-    try:
-        decoded_token = auth.verify_id_token(token)
-        return decoded_token['uid']
-    except Exception as e:
-        logger.error(f"Token verification failed: {str(e)}")
-        return None
+def add_cors_headers(response, origin):
+    """Add CORS headers to response."""
+    if origin in CORS_ORIGINS:
+        response.headers['Access-Control-Allow-Origin'] = origin
+        response.headers['Access-Control-Allow-Methods'] = 'GET, POST, DELETE, OPTIONS'
+        response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
+        response.headers['Access-Control-Max-Age'] = '3600'
+    return response
 
 
 @functions_framework.http
+@require_auth  # Require Firebase authentication
 def notes_api(request: Request):
     """
-    Notes API endpoint.
+    Notes API endpoint (authenticated).
     
     Endpoints:
     - POST /notes/process - Process a note through AI
     - GET /notes - List user's notes
     - DELETE /notes/{note_id} - Delete a note
     """
+    origin = request.headers.get('Origin')
     
-    # Enable CORS
+    # Handle CORS preflight
     if request.method == "OPTIONS":
-        headers = {
-            "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Methods": "GET, POST, DELETE, OPTIONS",
-            "Access-Control-Allow-Headers": "Content-Type, Authorization",
-            "Access-Control-Max-Age": "3600"
-        }
-        return ("", 204, headers)
-    
-    headers = {
-        "Access-Control-Allow-Origin": "*",
-        "Content-Type": "application/json"
-    }
+        response = jsonify({'status': 'ok'})
+        return add_cors_headers(response, origin)
     
     try:
-        # Verify authentication
-        user_id = verify_user_auth(request)
-        if not user_id:
-            return jsonify({"error": "Unauthorized"}), 401, headers
+        # Get authenticated user ID from request (set by @require_auth)
+        user_id = request.user_id
+        logger.info(f"Processing notes API request for user: {user_id}")
         
         # Route based on method and path
         path = request.path
         method = request.method
         
         if method == "POST" and path.endswith("/process"):
-            return process_note(request, user_id, headers)
+            response = process_note(request, user_id)
         elif method == "GET":
-            return list_notes(request, user_id, headers)
+            response = list_notes(request, user_id)
         elif method == "DELETE":
-            return delete_note(request, user_id, headers)
+            response = delete_note(request, user_id)
         else:
-            return jsonify({"error": "Not found"}), 404, headers
+            response = jsonify({"error": "Not found"}), 404
+        
+        return add_cors_headers(response, origin)
             
     except Exception as e:
-        logger.error(f"Unexpected error: {type(e).__name__}: {str(e)}")
-        return jsonify({"error": f"Internal server error: {str(e)}"}), 500, headers
+        logger.error(f"Unexpected error: {type(e).__name__}: {str(e)}", exc_info=True)
+        response = jsonify({"error": f"Internal server error: {str(e)}"}), 500
+        return add_cors_headers(response, origin)
 
 
-def process_note(request: Request, user_id: str, headers: Dict[str, str]):
+def process_note(request: Request, user_id: str):
     """
     Process a note through AI extraction.
     
@@ -122,7 +98,7 @@ def process_note(request: Request, user_id: str, headers: Dict[str, str]):
     try:
         data = request.get_json(silent=True)
         if not data:
-            return jsonify({"error": "Invalid JSON payload"}), 400, headers
+            return jsonify({"error": "Invalid JSON payload"}), 400
         
         note_id = data.get("note_id")
         content = data.get("content")
@@ -130,7 +106,7 @@ def process_note(request: Request, user_id: str, headers: Dict[str, str]):
         if not note_id or not content:
             return jsonify({
                 "error": "Invalid payload. Expected note_id and content"
-            }), 400, headers
+            }), 400
         
         logger.info(f"Processing note: {note_id} for user: {user_id}")
         
@@ -141,11 +117,12 @@ def process_note(request: Request, user_id: str, headers: Dict[str, str]):
         # Verify note belongs to user
         note_doc = note_ref.get()
         if not note_doc.exists:
-            return jsonify({"error": "Note not found"}), 404, headers
+            return jsonify({"error": "Note not found"}), 404
         
         note_data = note_doc.to_dict()
         if note_data.get("userId") != user_id:
-            return jsonify({"error": "Forbidden"}), 403, headers
+            logger.warning(f"User {user_id} attempted to process note owned by {note_data.get('userId')}")
+            return jsonify({"error": "Forbidden"}), 403
         
         # Update status
         note_ref.update({
@@ -161,14 +138,14 @@ def process_note(request: Request, user_id: str, headers: Dict[str, str]):
             "note_id": note_id,
             "status": "processing",
             "message": "Note processing started"
-        }), 200, headers
+        }), 200
         
     except Exception as e:
-        logger.error(f"Error processing note: {str(e)}")
-        return jsonify({"error": f"Failed to process note: {str(e)}"}), 500, headers
+        logger.error(f"Error processing note: {str(e)}", exc_info=True)
+        return jsonify({"error": f"Failed to process note: {str(e)}"}), 500
 
 
-def list_notes(request: Request, user_id: str, headers: Dict[str, str]):
+def list_notes(request: Request, user_id: str):
     """
     List user's notes.
     
@@ -209,14 +186,14 @@ def list_notes(request: Request, user_id: str, headers: Dict[str, str]):
             "success": True,
             "notes": notes,
             "count": len(notes)
-        }), 200, headers
+        }), 200
         
     except Exception as e:
-        logger.error(f"Error listing notes: {str(e)}")
-        return jsonify({"error": f"Failed to list notes: {str(e)}"}), 500, headers
+        logger.error(f"Error listing notes: {str(e)}", exc_info=True)
+        return jsonify({"error": f"Failed to list notes: {str(e)}"}), 500
 
 
-def delete_note(request: Request, user_id: str, headers: Dict[str, str]):
+def delete_note(request: Request, user_id: str):
     """
     Delete a note.
     
@@ -226,12 +203,12 @@ def delete_note(request: Request, user_id: str, headers: Dict[str, str]):
         # Extract note_id from path
         path_parts = request.path.split("/")
         if len(path_parts) < 2:
-            return jsonify({"error": "Invalid path"}), 400, headers
+            return jsonify({"error": "Invalid path"}), 400
         
         note_id = path_parts[-1]
         
         if not note_id:
-            return jsonify({"error": "Note ID required"}), 400, headers
+            return jsonify({"error": "Note ID required"}), 400
         
         logger.info(f"Deleting note: {note_id} for user: {user_id}")
         
@@ -241,11 +218,12 @@ def delete_note(request: Request, user_id: str, headers: Dict[str, str]):
         note_doc = note_ref.get()
         
         if not note_doc.exists:
-            return jsonify({"error": "Note not found"}), 404, headers
+            return jsonify({"error": "Note not found"}), 404
         
         note_data = note_doc.to_dict()
         if note_data.get("userId") != user_id:
-            return jsonify({"error": "Forbidden"}), 403, headers
+            logger.warning(f"User {user_id} attempted to delete note owned by {note_data.get('userId')}")
+            return jsonify({"error": "Forbidden"}), 403
         
         # Delete note
         note_ref.delete()
@@ -256,8 +234,8 @@ def delete_note(request: Request, user_id: str, headers: Dict[str, str]):
             "success": True,
             "note_id": note_id,
             "message": "Note deleted successfully"
-        }), 200, headers
+        }), 200
         
     except Exception as e:
-        logger.error(f"Error deleting note: {str(e)}")
-        return jsonify({"error": f"Failed to delete note: {str(e)}"}), 500, headers
+        logger.error(f"Error deleting note: {str(e)}", exc_info=True)
+        return jsonify({"error": f"Failed to delete note: {str(e)}"}), 500
