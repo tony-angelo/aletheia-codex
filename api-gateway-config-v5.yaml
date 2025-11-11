@@ -1,0 +1,243 @@
+swagger: '2.0'
+info:
+  title: Aletheia Codex API Gateway
+  description: API Gateway with backend authentication only
+  version: 5.0.0
+host: aletheia-codex-gateway-8o3dgi4n.uc.gateway.dev
+schemes:
+  - https
+produces:
+  - application/json
+consumes:
+  - application/json
+
+# NO security definitions at gateway level
+# Authentication handled by Cloud Functions
+
+paths:
+  # Review API Endpoints
+  /api/review/pending:
+    options:
+      summary: CORS preflight
+      operationId: corsReviewPending
+      x-google-backend:
+        address: https://us-central1-aletheia-codex-prod.cloudfunctions.net/review-api-function
+        path_translation: APPEND_PATH_TO_ADDRESS
+      responses:
+        200:
+          description: CORS headers
+    get:
+      summary: Get pending review items
+      operationId: getReviewPending
+      x-google-backend:
+        address: https://us-central1-aletheia-codex-prod.cloudfunctions.net/review-api-function
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - name: limit
+          in: query
+          type: integer
+        - name: min_confidence
+          in: query
+          type: number
+        - name: type
+          in: query
+          type: string
+        - name: order_by
+          in: query
+          type: string
+        - name: descending
+          in: query
+          type: boolean
+        - name: Authorization
+          in: header
+          type: string
+          description: Firebase JWT token
+      responses:
+        200:
+          description: Success
+        401:
+          description: Unauthorized
+
+  /api/review/approve:
+    options:
+      summary: CORS preflight
+      operationId: corsReviewApprove
+      x-google-backend:
+        address: https://us-central1-aletheia-codex-prod.cloudfunctions.net/review-api-function
+        path_translation: APPEND_PATH_TO_ADDRESS
+      responses:
+        200:
+          description: CORS headers
+    post:
+      summary: Approve review item
+      operationId: approveReviewItem
+      x-google-backend:
+        address: https://us-central1-aletheia-codex-prod.cloudfunctions.net/review-api-function
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - name: Authorization
+          in: header
+          type: string
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: object
+      responses:
+        200:
+          description: Success
+
+  /api/review/reject:
+    options:
+      summary: CORS preflight
+      operationId: corsReviewReject
+      x-google-backend:
+        address: https://us-central1-aletheia-codex-prod.cloudfunctions.net/review-api-function
+        path_translation: APPEND_PATH_TO_ADDRESS
+      responses:
+        200:
+          description: CORS headers
+    post:
+      summary: Reject review item
+      operationId: rejectReviewItem
+      x-google-backend:
+        address: https://us-central1-aletheia-codex-prod.cloudfunctions.net/review-api-function
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - name: Authorization
+          in: header
+          type: string
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: object
+      responses:
+        200:
+          description: Success
+
+  /api/review/batch-approve:
+    options:
+      summary: CORS preflight
+      operationId: corsReviewBatchApprove
+      x-google-backend:
+        address: https://us-central1-aletheia-codex-prod.cloudfunctions.net/review-api-function
+        path_translation: APPEND_PATH_TO_ADDRESS
+      responses:
+        200:
+          description: CORS headers
+    post:
+      summary: Batch approve
+      operationId: batchApproveReviewItems
+      x-google-backend:
+        address: https://us-central1-aletheia-codex-prod.cloudfunctions.net/review-api-function
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - name: Authorization
+          in: header
+          type: string
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: object
+      responses:
+        200:
+          description: Success
+
+  /api/review/batch-reject:
+    options:
+      summary: CORS preflight
+      operationId: corsReviewBatchReject
+      x-google-backend:
+        address: https://us-central1-aletheia-codex-prod.cloudfunctions.net/review-api-function
+        path_translation: APPEND_PATH_TO_ADDRESS
+      responses:
+        200:
+          description: CORS headers
+    post:
+      summary: Batch reject
+      operationId: batchRejectReviewItems
+      x-google-backend:
+        address: https://us-central1-aletheia-codex-prod.cloudfunctions.net/review-api-function
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - name: Authorization
+          in: header
+          type: string
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: object
+      responses:
+        200:
+          description: Success
+
+  /api/review/stats:
+    options:
+      summary: CORS preflight
+      operationId: corsReviewStats
+      x-google-backend:
+        address: https://us-central1-aletheia-codex-prod.cloudfunctions.net/review-api-function
+        path_translation: APPEND_PATH_TO_ADDRESS
+      responses:
+        200:
+          description: CORS headers
+    get:
+      summary: Get stats
+      operationId: getReviewStats
+      x-google-backend:
+        address: https://us-central1-aletheia-codex-prod.cloudfunctions.net/review-api-function
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - name: Authorization
+          in: header
+          type: string
+      responses:
+        200:
+          description: Success
+
+  /api/graph:
+    options:
+      summary: CORS preflight
+      operationId: corsGraph
+      x-google-backend:
+        address: https://us-central1-aletheia-codex-prod.cloudfunctions.net/graph-function
+        path_translation: APPEND_PATH_TO_ADDRESS
+      responses:
+        200:
+          description: CORS headers
+    get:
+      summary: Get graph nodes
+      operationId: getGraphNodes
+      x-google-backend:
+        address: https://us-central1-aletheia-codex-prod.cloudfunctions.net/graph-function
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - name: Authorization
+          in: header
+          type: string
+        - name: limit
+          in: query
+          type: integer
+          default: 50
+        - name: offset
+          in: query
+          type: integer
+          default: 0
+        - name: type
+          in: query
+          type: string
+        - name: nodeId
+          in: query
+          type: string
+        - name: query
+          in: query
+          type: string
+        - name: search
+          in: query
+          type: string
+      responses:
+        200:
+          description: Success
