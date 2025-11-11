@@ -34,15 +34,15 @@
     "rewrites": [
       {
         "source": "/api/review/**",
-        "function": "review-api-function"
+        "function": "reviewapifunction"
       },
       {
         "source": "/api/graph/**",
-        "function": "graph-function"
+        "function": "graphfunction"
       },
       {
         "source": "/api/notes/**",
-        "function": "notes-api-function"
+        "function": "notesapifunction"
       },
       {
         "source": "**",
