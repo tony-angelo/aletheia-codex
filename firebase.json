@@ -55,7 +55,7 @@
         "headers": [
           {
             "key": "Access-Control-Allow-Origin",
-            "value": "https://aletheia-codex-prod.web.app"
+            "value": "https://aletheiacodex.app"
           },
           {
             "key": "Access-Control-Allow-Methods",
