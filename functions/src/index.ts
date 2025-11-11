@@ -1,32 +1,128 @@
 /**
- * Import function triggers from their respective submodules:
- *
- * import {onCall} from "firebase-functions/v2/https";
- * import {onDocumentWritten} from "firebase-functions/v2/firestore";
- *
- * See a full list of supported triggers at https://firebase.google.com/docs/functions
+ * Firebase Functions for Aletheia Codex
+ * Handles API endpoints for review, graph, and notes
  */
 
-import {setGlobalOptions} from "firebase-functions";
-import {onRequest} from "firebase-functions/https";
+import {onRequest} from "firebase-functions/v2/https";
+import {setGlobalOptions} from "firebase-functions/v2";
 import * as logger from "firebase-functions/logger";
 
-// Start writing functions
-// https://firebase.google.com/docs/functions/typescript
+// Set global options for all functions
+setGlobalOptions({maxInstances: 10});
 
-// For cost control, you can set the maximum number of containers that can be
-// running at the same time. This helps mitigate the impact of unexpected
-// traffic spikes by instead downgrading performance. This limit is a
-// per-function limit. You can override the limit for each function using the
-// `maxInstances` option in the function's options, e.g.
-// `onRequest({ maxInstances: 5 }, (req, res) => { ... })`.
-// NOTE: setGlobalOptions does not apply to functions using the v1 API. V1
-// functions should each use functions.runWith({ maxInstances: 10 }) instead.
-// In the v1 API, each function can only serve one request per container, so
-// this will be the maximum concurrent request count.
-setGlobalOptions({ maxInstances: 10 });
+// Review API Function
+export const reviewapifunction = onRequest(
+  {
+    region: "us-central1",
+    cors: true,
+  },
+  (request, response) => {
+    logger.info("Review API called", {structuredData: true});
 
-// export const helloWorld = onRequest((request, response) => {
-//   logger.info("Hello logs!", {structuredData: true});
-//   response.send("Hello from Firebase!");
-// });
+    // CORS headers
+    response.header(
+      "Access-Control-Allow-Origin",
+      "https://aletheiacodex.app"
+    );
+    response.header(
+      "Access-Control-Allow-Methods",
+      "GET, POST, PUT, DELETE, OPTIONS"
+    );
+    response.header(
+      "Access-Control-Allow-Headers",
+      "Content-Type, Authorization"
+    );
+
+    if (request.method === "OPTIONS") {
+      response.status(200).send("OK");
+      return;
+    }
+
+    response.status(200).json({
+      success: true,
+      message: "Review API is working",
+      timestamp: new Date().toISOString(),
+      method: request.method,
+      path: request.path,
+      headers: request.headers,
+    });
+  }
+);
+
+// Notes API Function
+export const notesapifunction = onRequest(
+  {
+    region: "us-central1",
+    cors: true,
+  },
+  (request, response) => {
+    logger.info("Notes API called", {structuredData: true});
+
+    // CORS headers
+    response.header(
+      "Access-Control-Allow-Origin",
+      "https://aletheiacodex.app"
+    );
+    response.header(
+      "Access-Control-Allow-Methods",
+      "GET, POST, PUT, DELETE, OPTIONS"
+    );
+    response.header(
+      "Access-Control-Allow-Headers",
+      "Content-Type, Authorization"
+    );
+
+    if (request.method === "OPTIONS") {
+      response.status(200).send("OK");
+      return;
+    }
+
+    response.status(200).json({
+      success: true,
+      message: "Notes API is working",
+      timestamp: new Date().toISOString(),
+      method: request.method,
+      path: request.path,
+      headers: request.headers,
+    });
+  }
+);
+
+// Graph API Function
+export const graphfunction = onRequest(
+  {
+    region: "us-central1",
+    cors: true,
+  },
+  (request, response) => {
+    logger.info("Graph API called", {structuredData: true});
+
+    // CORS headers
+    response.header(
+      "Access-Control-Allow-Origin",
+      "https://aletheiacodex.app"
+    );
+    response.header(
+      "Access-Control-Allow-Methods",
+      "GET, POST, PUT, DELETE, OPTIONS"
+    );
+    response.header(
+      "Access-Control-Allow-Headers",
+      "Content-Type, Authorization"
+    );
+
+    if (request.method === "OPTIONS") {
+      response.status(200).send("OK");
+      return;
+    }
+
+    response.status(200).json({
+      success: true,
+      message: "Graph API is working",
+      timestamp: new Date().toISOString(),
+      method: request.method,
+      path: request.path,
+      headers: request.headers,
+    });
+  }
+);
