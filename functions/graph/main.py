@@ -24,6 +24,7 @@ PROJECT_ID = os.environ.get('GCP_PROJECT', 'aletheia-codex-prod')
 # CORS configuration
 ALLOWED_ORIGINS = [
     'https://aletheia-codex-prod.web.app',
+    'https://aletheiacodex.app',
     'http://localhost:3000'
 ]
 
