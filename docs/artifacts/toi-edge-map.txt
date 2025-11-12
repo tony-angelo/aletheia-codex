@@ -1,0 +1,244 @@
+TOI EDGE MAP - SUPERNINJA WORKFLOW
+
+==============================================================================
+OVERVIEW
+==============================================================================
+
+This document maps all Transfer of Information (TOI) edges in the SuperNinja
+workflow system. Each edge represents a handoff between nodes through the Human.
+
+NODE TYPES:
+- Process Master: Defines and refines workflows
+- Architect: Technical ownership and sprint execution
+- Admin-[Domain]: Implementation work in specific domains
+- Docmaster-Sprint: Sprint documentation
+- Docmaster-Code: Code documentation
+
+==============================================================================
+PRIMARY SPRINT LOOP EDGES
+==============================================================================
+
+1. ARCHITECT -> ADMIN-[DOMAIN] (Sprint Initialization)
+   Source: Architect
+   Target: Admin-[Domain] (Backend, Frontend, Shared)
+   Trigger: Sprint planning complete
+   Purpose: Initialize sprint work for specific domain
+   Deliverables from Architect:
+   - Sprint guide in Admin inbox
+   - Domain-specific instructions
+   Prompt Template: architect-to-admin-sprint-init.txt
+   Template Location: /docs/artifacts/architect/templates/
+
+2. ADMIN-[DOMAIN] -> DOCMASTER-SPRINT
+   Source: Admin-[Domain]
+   Target: Docmaster-Sprint
+   Trigger: Admin completes sprint work
+   Purpose: Hand off for sprint documentation
+   Deliverables from Admin:
+   - Session logs
+   - Troubleshooting documentation
+   - Implementation notes
+   Prompt Template: admin-to-docmaster-sprint.txt
+   Template Location: /docs/artifacts/admin-[domain]/templates/
+
+3. DOCMASTER-SPRINT -> DOCMASTER-CODE
+   Source: Docmaster-Sprint
+   Target: Docmaster-Code
+   Trigger: Sprint documentation complete
+   Purpose: Hand off for code documentation
+   Deliverables from Docmaster-Sprint:
+   - Sprint summary
+   - Outcomes documentation
+   - Lessons learned
+   Prompt Template: docmaster-sprint-to-docmaster-code.txt
+   Template Location: /docs/artifacts/docmaster-sprint/templates/
+
+4. DOCMASTER-CODE -> ARCHITECT
+   Source: Docmaster-Code
+   Target: Architect
+   Trigger: Code documentation complete
+   Purpose: Complete feedback loop, prepare next sprint
+   Deliverables from Docmaster-Code:
+   - Code documentation
+   - README updates
+   - Inline documentation updates
+   Prompt Template: docmaster-code-to-architect.txt
+   Template Location: /docs/artifacts/docmaster-code/templates/
+
+==============================================================================
+ESCALATION EDGES
+==============================================================================
+
+5. ADMIN-[DOMAIN] -> ARCHITECT (Escalation)
+   Source: Admin-[Domain]
+   Target: Architect
+   Trigger: Admin encounters blocker
+   Purpose: Escalate issue for architectural guidance
+   Deliverables from Admin:
+   - Escalation documentation
+   - Supporting evidence
+   - Attempted solutions
+   Prompt Template: admin-to-architect-escalation.txt
+   Template Location: /docs/artifacts/admin-[domain]/templates/
+
+6. ARCHITECT -> ADMIN-[DOMAIN] (Escalation Response)
+   Source: Architect
+   Target: Admin-[Domain]
+   Trigger: Architect resolves escalation
+   Purpose: Provide guidance to unblock Admin
+   Deliverables from Architect:
+   - Resolution guidance
+   - Updated sprint guide (if needed)
+   - Architectural decisions
+   Prompt Template: architect-to-admin-escalation-feedback.txt
+   Template Location: /docs/artifacts/architect/templates/
+
+==============================================================================
+WORKFLOW IMPROVEMENT EDGES
+==============================================================================
+
+7. ARCHITECT -> PROCESS-MASTER (Workflow Feedback)
+   Source: Architect
+   Target: Process Master
+   Trigger: Architect identifies workflow issue
+   Purpose: Request workflow improvement
+   Deliverables from Architect:
+   - Workflow feedback document
+   - Issue description
+   - Suggested improvements
+   Prompt Template: architect-to-process-master-feedback.txt
+   Template Location: /docs/artifacts/architect/templates/
+
+8. PROCESS-MASTER -> ARCHITECT (Workflow Update)
+   Source: Process Master
+   Target: Architect
+   Trigger: Process Master completes workflow refinement
+   Purpose: Notify of workflow changes
+   Deliverables from Process Master:
+   - Updated node directives
+   - Updated templates
+   - Change summary
+   Prompt Template: process-master-to-architect-update.txt
+   Template Location: /docs/artifacts/process-master/templates/
+
+9. HUMAN -> PROCESS-MASTER (Direct Feedback)
+   Source: Human
+   Target: Process Master
+   Trigger: Human identifies workflow issue
+   Purpose: Request workflow improvement
+   Deliverables from Human:
+   - Workflow feedback document
+   - Issue description
+   - Suggested improvements
+   Template: process-feedback.md
+   Template Location: /docs/artifacts/templates/
+
+10. PROCESS-MASTER -> HUMAN (Workflow Update Notification)
+    Source: Process Master
+    Target: Human
+    Trigger: Process Master completes workflow refinement
+    Purpose: Notify Human of changes
+    Deliverables from Process Master:
+    - Change summary
+    - Updated documentation list
+    - Impact assessment
+    Prompt Template: process-master-to-human-update.txt
+    Template Location: /docs/artifacts/process-master/templates/
+
+==============================================================================
+EDGE CHARACTERISTICS
+==============================================================================
+
+Each TOI edge has:
+1. SOURCE NODE: The node initiating the handoff
+2. TARGET NODE: The node receiving the handoff
+3. TRIGGER: What causes this edge to activate
+4. PURPOSE: Why this handoff occurs
+5. DELIVERABLES: What the source node provides
+6. PROMPT TEMPLATE: Specific template for this edge
+7. TEMPLATE LOCATION: Where the template is stored
+
+TEMPLATE STORAGE RULE:
+- Each node stores templates for edges where they are the SOURCE
+- Example: Architect stores architect-to-admin-sprint-init.txt
+- Example: Admin stores admin-to-docmaster-sprint.txt
+
+==============================================================================
+EDGE FLOW VISUALIZATION
+==============================================================================
+
+PRIMARY SPRINT LOOP:
+Architect -> Admin-[Domain] -> Docmaster-Sprint -> Docmaster-Code -> Architect
+    ^                                                                      |
+    |______________________________________________________________________|
+
+ESCALATION LOOP:
+Admin-[Domain] <-> Architect
+
+WORKFLOW IMPROVEMENT LOOPS:
+Architect <-> Process Master
+Human -> Process Master -> Human
+
+COMPLETE SYSTEM:
+                    Human
+                      |
+                      v
+               Process Master
+                   ^    |
+                   |    v
+    Architect <----+---->
+    ^   |   ^
+    |   |   |
+    |   v   | (escalation)
+    | Admin |
+    |   |   
+    |   v   
+    | Docmaster-Sprint
+    |   |
+    |   v
+    | Docmaster-Code
+    |   |
+    +---+
+
+==============================================================================
+TEMPLATE CREATION RESPONSIBILITY
+==============================================================================
+
+ARCHITECT CREATES (initially):
+- architect-to-admin-sprint-init.txt
+- architect-to-admin-escalation-feedback.txt
+- architect-to-process-master-feedback.txt
+
+ADMIN CREATES (initially):
+- admin-to-docmaster-sprint.txt
+- admin-to-architect-escalation.txt
+
+DOCMASTER-SPRINT CREATES (initially):
+- docmaster-sprint-to-docmaster-code.txt
+
+DOCMASTER-CODE CREATES (initially):
+- docmaster-code-to-architect.txt
+
+PROCESS MASTER CREATES (initially):
+- process-master-to-architect-update.txt
+- process-master-to-human-update.txt
+
+PROCESS MASTER MAINTAINS:
+- All templates after initial creation
+- Updates based on feedback
+- Ensures consistency across all templates
+
+==============================================================================
+VERSION HISTORY
+==============================================================================
+
+v1.0.0 - Initial TOI edge map
+- Defined primary sprint loop edges
+- Defined escalation edges
+- Defined workflow improvement edges
+- Established template storage rules
+- Created edge flow visualization
+
+==============================================================================
+END OF TOI EDGE MAP
+==============================================================================

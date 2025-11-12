@@ -1,0 +1,59 @@
+==============================================================================
+INPUTS
+==============================================================================
+
+Documents in your inbox:
+- /docs/artifacts/[node-directory]/inbox/[document-name]
+- [Additional documents as needed]
+
+Reference documents:
+- [Document location and description]
+- [Document location and description]
+
+==============================================================================
+DELIVERABLES
+==============================================================================
+
+You are expected to produce:
+
+1. [Deliverable 1]
+   - Location: [Where to save]
+   - Format: [File format]
+   - Description: [What it should contain]
+
+2. [Deliverable 2]
+   - Location: [Where to save]
+   - Format: [File format]
+   - Description: [What it should contain]
+
+==============================================================================
+WORKFLOW
+==============================================================================
+
+1. Read your prime directive
+2. Read all documents in your inbox
+3. [Specific step for this session]
+4. [Specific step for this session]
+5. [Specific step for this session]
+6. Produce deliverables
+7. Provide outgoing prompt for next node
+
+==============================================================================
+NEXT NODE
+==============================================================================
+
+Upon completion, provide a prompt for:
+[Next Node Name]
+
+Use the prompt template at:
+/docs/artifacts/templates/prompt.txt
+
+==============================================================================
+SPECIAL INSTRUCTIONS
+==============================================================================
+
+[Any special considerations, constraints, or guidance for this specific session]
+
+==============================================================================
+END OF PROMPT
+==============================================================================

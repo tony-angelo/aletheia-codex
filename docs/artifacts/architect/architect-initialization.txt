@@ -1,0 +1,345 @@
+ARCHITECT - INITIALIZATION DIRECTIVE
+   
+   ==============================================================================
+   PURPOSE
+   ==============================================================================
+   
+   This directive guides the Architect through initial project setup. This is a one-time initialization process that establishes the foundation for the sprint development cycle.
+   
+   ==============================================================================
+   PATH NOTATION
+   ==============================================================================
+   
+   This document uses standard path notation to indicate file locations:
+   - [workspace] = Your personal workspace (not shared, temporary)
+   - [artifacts] = Artifacts branch of repository (shared, persistent)
+   - [main] = Main branch of repository (production code)
+   
+   For complete details, see [artifacts]/PATH_NOTATION.md
+   
+   ==============================================================================
+   PREREQUISITES
+   ==============================================================================
+   
+   Before starting initialization:
+   - Project repository exists and is accessible
+   - Project vision document exists (PROJECT_VISION.md in repository)
+   - You have read your prime directive (architect.txt)
+   - You understand the SuperNinja workflow system
+   - You understand the path notation system ([artifacts]/PATH_NOTATION.md)
+   
+   ==============================================================================
+   INITIALIZATION SEQUENCE
+   ==============================================================================
+   
+   1. ANALYZE PROJECT
+      - Clone project repository
+      - Review PROJECT_VISION.md
+      - Understand project requirements
+      - Assess technical constraints
+      - Identify technology stack
+      - Review existing codebase
+   
+   2. DEFINE DOMAINS
+      - Analyze repository structure
+      - Identify natural boundaries based on:
+        * Directory organization
+        * Technology stacks
+        * Functional responsibilities
+        * Deployment units
+      - Define domain responsibilities
+      - Document domain interfaces
+      - Create domain-definitions.md (on artifacts branch)
+   
+   3. CREATE NODE PRIME DIRECTIVES
+      Use the node template at [artifacts]/templates/node.txt to create prime directives for each Admin and Docmaster node.
+      
+      FOR EACH ADMIN DOMAIN:
+      a. Copy node.txt template
+      b. Replace [NODE NAME] with "Admin-[Domain]"
+      c. Replace [node-directory] with "admin-[domain]"
+      d. Define role and responsibilities specific to this domain
+      e. Define workflow for sprint execution
+      f. Define interactions with Architect and Docmasters
+      g. Define TOI edges (to Docmaster-Sprint)
+      h. Define deliverables (code, session logs)
+      i. Save to [artifacts]/admin-[domain]/admin-[domain].txt
+      
+      FOR DOCMASTER-SPRINT:
+      a. Copy node.txt template
+      b. Replace [NODE NAME] with "Docmaster-Sprint"
+      c. Replace [node-directory] with "docmaster-sprint"
+      d. Define role: Consolidate session logs into sprint summary
+      e. Define workflow for processing session logs
+      f. Define interactions with Admin nodes and Docmaster-Code
+      g. Define TOI edges (to Docmaster-Code)
+      h. Define deliverables (sprint summary)
+      i. Save to [artifacts]/docmaster-sprint/docmaster-sprint.txt
+      
+      FOR DOCMASTER-CODE:
+      a. Copy node.txt template
+      b. Replace [NODE NAME] with "Docmaster-Code"
+      c. Replace [node-directory] with "docmaster-code"
+      d. Define role: Document code and create final deliverables
+      e. Define workflow for code documentation
+      f. Define interactions with Docmaster-Sprint and Architect
+      g. Define TOI edges (to Architect)
+      h. Define deliverables (code documentation, sprint package)
+      i. Save to [artifacts]/docmaster-code/docmaster-code.txt
+   
+   4. CREATE PROCESS-LEVEL TEMPLATES
+      You must create initial versions of all process-level templates. These templates define the structure and content for deliverables that nodes will create during sprints.
+      
+      a. sprint-guide.md
+         - YOU MUST CREATE THIS TEMPLATE
+         - Location: [artifacts]/templates/sprint-guide.md
+         - Purpose: Template for sprint guides that you will create for each sprint
+         - Audience: Admin nodes
+         - Define structure for sprint guides
+         - Include all sections: Sprint overview, Features by domain, Escalation criteria, Success criteria, References
+         - Add project-specific sections as needed
+      
+      b. escalation-doc.md
+         - YOU MUST CREATE THIS TEMPLATE
+         - Location: [artifacts]/templates/escalation-doc.md
+         - Purpose: Template for Admin nodes to document blockers and escalations
+         - Audience: Architect (you will receive these)
+         - Define escalation documentation structure
+         - Include: Blocker description, Context, Attempted solutions, Analysis, Proposed solutions, Questions
+      
+      c. session-log.md
+         - YOU MUST CREATE THIS TEMPLATE
+         - Location: [artifacts]/templates/session-log.md
+         - Purpose: Template for Admin nodes to log daily/per-session work
+         - Audience: Docmaster-Sprint, Docmaster-Code, Architect
+         - Define session log structure
+         - Include: Session overview, Work completed, Challenges, Blockers, Decisions, Testing, Next session plan
+      
+      d. sprint-summary.md
+         - YOU MUST CREATE THIS TEMPLATE
+         - Location: [artifacts]/templates/sprint-summary.md
+         - Purpose: Template for Docmaster-Sprint to summarize sprint outcomes
+         - Audience: Docmaster-Code, Architect
+         - Define sprint summary structure
+         - Include: Executive summary, Features completed, Work summary, Blockers, Metrics, Quality assessment, Lessons learned, Recommendations
+      
+      e. code-documentation.md
+         - YOU MUST CREATE THIS TEMPLATE
+         - Location: [artifacts]/templates/code-documentation.md
+         - Purpose: Template for Docmaster-Code to document code and deliverables
+         - Audience: Architect, Human
+         - Define code documentation structure
+         - Include: Code changes by domain, API documentation, Database changes, Testing, Deployment notes, Technical debt, Quality metrics
+         - Include guidelines for inline code documentation
+         - Include template for README files
+   
+   5. CREATE TOI PROMPT TEMPLATES
+      Create templates for all outgoing TOI edges:
+      
+      a. architect-to-admin-sprint-init.txt
+         - Location: [artifacts]/architect/templates/
+         - Template for initializing Admin nodes with sprint work
+         - Include sprint guide reference
+         - Include deliverables expected
+      
+      b. architect-to-admin-escalation-feedback.txt
+         - Location: [artifacts]/architect/templates/
+         - Template for responding to Admin escalations
+         - Include resolution guidance format
+         - Include updated sprint guide reference (if applicable)
+      
+      c. architect-to-node-master-feedback.txt
+         - Location: [artifacts]/architect/templates/
+         - Template for providing workflow feedback to Node Master
+         - Include issue description format
+         - Include suggested improvements format
+   
+   6. DEFINE STANDARDS
+      Document project-specific standards:
+      
+      a. Git Branch Naming
+         - Location: [artifacts]/architect/git-standards.md
+         - Define branch naming convention
+         - Example: sprint-[N]-[domain]-[feature-name]
+         - Document branch lifecycle
+      
+      b. Commit Message Standards
+         - Location: [artifacts]/architect/git-standards.md
+         - Define commit message format
+         - Define commit types and scopes
+         - Provide examples
+      
+      c. Code Documentation Standards
+         - Location: [artifacts]/architect/code-standards.md
+         - Define inline comment standards
+         - Define function/class documentation format
+         - Define README structure
+      
+      d. API Documentation Format (if applicable)
+         - Location: [artifacts]/architect/api-standards.md
+         - Define API documentation structure
+         - Define endpoint documentation format
+         - Provide examples
+   
+   7. DEFINE ESCALATION LOOP
+      Create the escalation workflow definition:
+      
+      - Location: [artifacts]/architect/escalation-workflow.md
+      - Define escalation documentation requirements
+      - Define resolution process
+      - Define communication protocols
+      - Include examples of escalation scenarios
+      
+      ESCALATION HANDLING WORKFLOW:
+      
+      Define how escalations will be handled during sprints:
+      
+      a. RECEIVE ESCALATION
+         - Admin commits escalation-doc.md to their outbox (on artifacts branch)
+         - Human notifies Architect of escalation
+         - Architect reviews the escalation documentation
+      
+      b. ANALYZE BLOCKER
+         - Understand the technical issue
+         - Review attempted solutions
+         - Consider architectural implications
+         - Determine resolution approach
+      
+      c. PROVIDE GUIDANCE
+         - Create clear, actionable guidance
+         - Update sprint guide if requirements changed
+         - Document architectural decisions if needed
+         - Create escalation response prompt
+         - Provide prompt to Human for TOI to Admin
+      
+      d. FOLLOW UP
+         - Monitor if guidance unblocks Admin
+         - Be available for clarification
+         - Update escalation workflow if needed
+      
+      Document this workflow in escalation-workflow.md
+   
+   8. NOTIFY NODE MASTER
+      After creating all templates:
+      
+      - Create notification document
+      - Location: [artifacts]/node-master/inbox/templates-complete.md
+      - List all templates created
+      - Provide locations
+      - Request Node Master to begin maintenance
+      - Provide prompt to Human for TOI to Node Master
+   
+   9. PLAN FIRST SPRINT
+      Prepare for sprint 1:
+      
+      - Identify initial features from PROJECT_VISION.md
+      - Map features to domains
+      - Define sprint 1 goals
+      - Define escalation criteria for sprint 1
+      - Create sprint-1-guide.md using template
+      - Commit to Admin inboxes ([artifacts]/admin-[domain]/inbox/) (on artifacts branch)
+      - Create initialization prompts for Admin nodes
+      - Provide prompts to Human to begin sprint 1
+   
+   ==============================================================================
+   DELIVERABLES CHECKLIST
+   ==============================================================================
+   
+   Before considering initialization complete, verify:
+   
+   DOMAIN DEFINITIONS:
+   - [ ] domain-definitions.md created (on artifacts branch)
+   - [ ] All domains defined with clear boundaries
+   - [ ] Domain interfaces documented
+   - [ ] Admin node considerations included
+   
+   NODE PRIME DIRECTIVES:
+   - [ ] admin-[domain].txt created for each domain (on artifacts branch)
+   - [ ] docmaster-sprint.txt created (on artifacts branch)
+   - [ ] docmaster-code.txt created (on artifacts branch)
+   - [ ] All nodes have complete role definitions
+   - [ ] All nodes have defined workflows
+   - [ ] All nodes have defined TOI edges
+   
+   PROCESS-LEVEL TEMPLATES (YOU MUST CREATE THESE):
+   - [ ] sprint-guide.md template created (on artifacts branch)
+   - [ ] escalation-doc.md template created (on artifacts branch)
+   - [ ] session-log.md template created (on artifacts branch)
+   - [ ] sprint-summary.md template created (on artifacts branch)
+   - [ ] code-documentation.md template created (on artifacts branch)
+   
+   TOI PROMPT TEMPLATES:
+   - [ ] architect-to-admin-sprint-init.txt created (on artifacts branch)
+   - [ ] architect-to-admin-escalation-feedback.txt created (on artifacts branch)
+   - [ ] architect-to-node-master-feedback.txt created (on artifacts branch)
+   
+   STANDARDS:
+   - [ ] git-standards.md created (on artifacts branch)
+   - [ ] code-standards.md created (on artifacts branch)
+   - [ ] api-standards.md created if applicable (on artifacts branch)
+   
+   ESCALATION WORKFLOW:
+   - [ ] escalation-workflow.md created (on artifacts branch)
+   - [ ] Escalation documentation requirements defined
+   - [ ] Resolution process documented
+   
+   NODE MASTER NOTIFICATION:
+   - [ ] templates-complete.md created (on artifacts branch)
+   - [ ] Prompt provided to Human for TOI to Node Master
+   
+   FIRST SPRINT:
+   - [ ] Sprint 1 features identified
+   - [ ] Sprint 1 escalation criteria defined
+   - [ ] sprint-1-guide.md created for each domain (on artifacts branch)
+   - [ ] Initialization prompts created for Admin nodes
+   - [ ] Ready to begin sprint 1
+   
+   ==============================================================================
+   TEMPLATE USAGE GUIDE
+   ==============================================================================
+   
+   TEMPLATE CREATION RESPONSIBILITIES:
+   
+   PROJECT-LEVEL TEMPLATES (Already created by Node Master):
+   - deliverable-header.md ✅
+   - deliverable-footer.md ✅
+   - node-feedback.md ✅
+   - node.txt ✅
+   - prompt.txt ✅
+   
+   PROCESS-LEVEL TEMPLATES (YOU MUST CREATE):
+   - sprint-guide.md ⏳
+   - escalation-doc.md ⏳
+   - session-log.md ⏳
+   - sprint-summary.md ⏳
+   - code-documentation.md ⏳
+   
+   TOI PROMPT TEMPLATES (YOU MUST CREATE):
+   - architect-to-admin-sprint-init.txt ⏳
+   - architect-to-admin-escalation-feedback.txt ⏳
+   - architect-to-node-master-feedback.txt ⏳
+   
+   ---
+   
+   NODE PRIME DIRECTIVE TEMPLATE USAGE:
+   
+   When creating node prime directives using [artifacts]/templates/node.txt:
+   
+   STATIC SECTIONS (Already complete in template):
+   - WORKING LOCATIONS: No changes needed
+   - WORKSPACE HYGIENE: Already included in template as last responsibility
+   
+   SECTIONS TO CUSTOMIZE:
+   - ROLE DEFINITION: Define the node's primary purpose
+   - CORE RESPONSIBILITIES: Define 4-6 specific responsibilities
+   - WHAT YOU DO NOT DO: Define clear boundaries
+   - WORKFLOW: Define the node's operational cycle
+   - INTERACTIONS: Define how node communicates with others
+   - TOI EDGES: Define specific information transfers
+   - DELIVERABLES: Define what the node produces
+   - QUALITY STANDARDS: Define quality criteria for deliverables
+   - EFFICIENCY PRINCIPLES: Define efficiency guidelines
+   
+   ==============================================================================
+   END OF INITIALIZATION DIRECTIVE
+   ==============================================================================
