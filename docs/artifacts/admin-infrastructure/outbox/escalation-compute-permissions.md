@@ -318,16 +318,169 @@ While blocked on Load Balancer configuration, I can:
 ## Resolution (To be filled by Architect)
 
 ### Architect Response
-[Architect will fill this section with guidance]
+
+**Date**: 2025-01-18  
+**Responded By**: Architect  
+**Response Time**: 2 hours from escalation  
+**Status**: ✅ RESOLVED
+
+Thank you for the thorough escalation documentation. You correctly identified the root cause: the service account analysis document stated the SuperNinja account had sufficient permissions for Load Balancer configuration, but the actual IAM roles were missing `roles/compute.admin`.
+
+**Root Cause Confirmation**: 
+The service account analysis was based on planned permissions rather than actual granted permissions. This was an oversight in the initial service account setup.
+
+**Resolution Action Taken**:
+The project owner has granted `roles/compute.admin` to the SuperNinja service account (`superninja@aletheia-codex-prod.iam.gserviceaccount.com`). You now have full permissions to create and configure all Compute Engine resources needed for the Load Balancer + IAP solution.
 
 ### Recommended Approach
-[Architect will specify the recommended solution]
+
+**Proceed with Option 1: Use Compute Admin Role**
+
+You should now proceed with your original plan to configure the Load Balancer using gcloud CLI. The `roles/compute.admin` role provides all necessary permissions for:
+
+1. Creating and managing backend services
+2. Configuring URL maps and routing rules
+3. Setting up network endpoint groups (NEGs) for serverless backends
+4. Configuring health checks
+5. Managing SSL certificates
+6. Configuring IAP on backend services
+
+**Implementation Steps**:
+
+1. **Verify Permissions** (5 minutes)
+   ```bash
+   # Re-authenticate to pick up new permissions
+   gcloud auth activate-service-account --key-file=/workspace/aletheia-codex-prod-af9a64a7fcaa.json
+   
+   # Verify compute permissions
+   gcloud compute backend-services list
+   gcloud compute url-maps list
+   gcloud compute network-endpoint-groups list
+   ```
+
+2. **Create Serverless NEGs** (30 minutes)
+   - Create NEGs for each Cloud Run service (Gen 2 functions)
+   - Create NEG for Gen 1 function
+   - Reference your Cloud Functions inventory from session log
+
+3. **Configure Backend Services** (45 minutes)
+   - Create backend service for each function
+   - Configure health checks
+   - Enable IAP on each backend service
+   - Set appropriate timeout values
+
+4. **Create URL Map** (30 minutes)
+   - Configure routing rules as specified in sprint guide
+   - Set up path-based routing to appropriate backends
+   - Configure default backend
+
+5. **Create Load Balancer** (30 minutes)
+   - Create target HTTPS proxy
+   - Configure SSL certificate
+   - Create forwarding rule
+   - Document the Load Balancer IP/URL
+
+6. **Test Configuration** (30 minutes)
+   - Verify routing to each backend
+   - Test IAP authentication flow
+   - Confirm 403 errors are resolved
 
 ### Updated Requirements
-[Any changes to requirements or acceptance criteria]
+
+**No changes to requirements or acceptance criteria.** Your sprint guide remains accurate. Proceed with Feature 1 as documented.
+
+**Timeline Update**:
+- Original estimate: 2-3 days
+- Time lost to blocker: 2 hours
+- Revised estimate: 2-3 days (still achievable)
 
 ### Additional Guidance
-[Any additional architectural guidance]
+
+**Best Practices for Load Balancer Configuration**:
+
+1. **Naming Convention**: Use consistent naming for all resources
+   - Backend services: `backend-[function-name]`
+   - NEGs: `neg-[function-name]`
+   - Health checks: `health-[function-name]`
+
+2. **Health Checks**: Configure appropriate health check paths
+   - For Cloud Run services, use `/` or a dedicated health endpoint
+   - Set reasonable timeout and interval values
+   - Consider cold start times for Cloud Functions
+
+3. **IAP Configuration**:
+   - Enable IAP on each backend service individually
+   - Configure OAuth consent screen if not already done
+   - Grant IAP-secured Web App User role to appropriate service accounts
+   - Test IAP authentication before proceeding to frontend integration
+
+4. **SSL Certificate**:
+   - Use Google-managed SSL certificate for simplicity
+   - Ensure DNS is configured before certificate provisioning
+   - Certificate provisioning can take 15-60 minutes
+
+5. **Testing Strategy**:
+   - Test each backend individually before full integration
+   - Use curl with appropriate headers to test IAP
+   - Verify routing rules work as expected
+   - Document the Load Balancer URL for frontend team
+
+6. **Documentation**:
+   - Document the Load Balancer URL prominently
+   - Create a routing table showing path → backend mapping
+   - Document IAP configuration for backend team reference
+   - Update session logs with configuration details
+
+**Coordination with Other Admin Nodes**:
+
+- **Admin-Backend**: Will need the Load Balancer URL and IAP configuration details
+- **Admin-Frontend**: Will need the Load Balancer URL to update API client
+- **Timing**: Complete Load Balancer configuration before other nodes begin their work
+
+**Alternative Work While Testing**:
+While waiting for SSL certificate provisioning or other async operations, you can:
+- Prepare monitoring and alerting configuration (Feature 5)
+- Document deployment procedures
+- Review backend code for IAP compatibility requirements
+- Prepare Cloud Functions deployment scripts (Feature 4)
+
+**Escalation Process Feedback**:
+Your escalation was exemplary:
+- ✅ Clear problem description with error messages
+- ✅ Thorough investigation and root cause analysis
+- ✅ Multiple solution options with pros/cons
+- ✅ Specific questions for Architect
+- ✅ Impact assessment and timeline analysis
+- ✅ Workaround strategy while blocked
+
+This is exactly how escalations should be handled. Well done.
+
+### Next Steps for Admin-Infrastructure
+
+1. **Immediate** (next 15 minutes):
+   - Re-authenticate with service account
+   - Verify compute permissions are working
+   - Update todo.md with unblocked status
+   - Update session log with resolution
+
+2. **Today** (next 4-6 hours):
+   - Complete Feature 1: Configure Load Balancer
+   - Test routing and IAP configuration
+   - Document Load Balancer URL and configuration
+   - Create handoff document for Admin-Backend and Admin-Frontend
+
+3. **Tomorrow**:
+   - Begin Feature 2: Configure IAP (if not completed today)
+   - Begin Feature 5: Configure Monitoring
+   - Coordinate with Admin-Backend on IAP integration
+
+**You are now unblocked and can proceed with Sprint 1 implementation.**
+
+---
+
+**Architect Signature**: Architect Node  
+**Date**: 2025-01-18  
+**Escalation Status**: ✅ RESOLVED
 
 ---
 
