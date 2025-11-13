@@ -32,9 +32,8 @@ class OrchestrationService {
   private baseUrl: string;
 
   constructor() {
-    // Use environment variable or default to local development
-    this.baseUrl = process.env.REACT_APP_ORCHESTRATION_URL || 
-                   'https://us-central1-aletheia-codex.cloudfunctions.net/orchestration';
+    // Use environment variable or default to Load Balancer endpoint
+    this.baseUrl = process.env.REACT_APP_ORCHESTRATION_URL || '/api/orchestrate';
   }
 
   /**
