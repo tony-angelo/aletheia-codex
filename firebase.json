@@ -33,8 +33,16 @@
     ],
     "rewrites": [
       {
-        "source": "/api/**",
-        "destination": "https://34.120.185.233/api/:splat"
+        "source": "/api/review/**",
+        "function": "reviewapifunction"
+      },
+      {
+        "source": "/api/graph/**",
+        "function": "graphfunction"
+      },
+      {
+        "source": "/api/notes/**",
+        "function": "notesapifunction"
       },
       {
         "source": "**",
