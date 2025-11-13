@@ -1,0 +1,250 @@
+==============================================================================
+TRANSFER OF INFORMATION (TOI) PROMPT
+==============================================================================
+
+FROM: Architect
+TO: Node Master
+PURPOSE: Workflow Feedback
+DATE: [Date]
+
+==============================================================================
+INSTRUCTIONS FOR HUMAN
+==============================================================================
+
+This prompt provides workflow feedback to Node Master for process improvement.
+
+1. Copy the entire prompt below (between the === PROMPT START === and === PROMPT END === markers)
+2. Paste it into a new conversation with SuperNinja as Node Master
+3. Node Master will review the feedback and update workflows as needed
+
+==============================================================================
+=== PROMPT START ===
+==============================================================================
+
+You are Node Master for the SuperNinja multi-threaded AI workflow system.
+
+# Workflow Feedback from Architect
+
+## Feedback Context
+
+**Project**: AletheiaCodex
+**Sprint**: [Sprint Number if applicable]
+**Date**: [Date]
+**Feedback Type**: [Process Issue | Template Improvement | Workflow Enhancement | Other]
+
+---
+
+## Issue Description
+
+### What's Not Working
+[Clear description of the workflow issue or improvement opportunity]
+
+### Impact
+[How this issue affects the workflow or team productivity]
+
+**Severity**: High | Medium | Low
+
+**Affected Nodes**: [List nodes affected by this issue]
+
+**Frequency**: [How often this issue occurs]
+
+---
+
+## Context
+
+### When This Occurs
+[Describe when and under what circumstances this issue occurs]
+
+### Current Process
+[Describe the current process or workflow]
+
+### Why It's Problematic
+[Explain why the current approach is problematic]
+
+---
+
+## Evidence
+
+### Specific Examples
+[Provide specific examples of when this issue occurred]
+
+**Example 1**:
+- **Situation**: [Describe the situation]
+- **Problem**: [What went wrong]
+- **Impact**: [How it affected the sprint]
+
+**Example 2**:
+[Additional examples if applicable]
+
+### Patterns Observed
+[Describe any patterns you've observed]
+
+- [Pattern 1]
+- [Pattern 2]
+
+---
+
+## Proposed Solution
+
+### Recommended Changes
+[Describe the recommended changes to the workflow or templates]
+
+**Change 1**: [Specific change]
+- **Rationale**: [Why this change would help]
+- **Implementation**: [How to implement this change]
+- **Impact**: [Expected positive impact]
+
+**Change 2**: [Specific change]
+- **Rationale**: [Why this change would help]
+- **Implementation**: [How to implement this change]
+- **Impact**: [Expected positive impact]
+
+### Alternative Approaches
+[If applicable, describe alternative approaches considered]
+
+**Alternative 1**: [Description]
+- **Pros**: [Advantages]
+- **Cons**: [Disadvantages]
+- **Why not recommended**: [Reason]
+
+---
+
+## Affected Artifacts
+
+### Documents to Update
+[List documents that would need to be updated]
+
+- [ ] [artifacts]/node-master/node-master.txt
+- [ ] [artifacts]/architect/architect.txt
+- [ ] [artifacts]/admin-[domain]/admin-[domain].txt
+- [ ] [artifacts]/templates/[template-name].md
+- [ ] [artifacts]/[other-document].md
+
+### New Documents Needed
+[List any new documents that should be created]
+
+- [ ] [Document 1]: [Purpose]
+- [ ] [Document 2]: [Purpose]
+
+---
+
+## Implementation Plan
+
+### Priority
+**Priority**: High | Medium | Low
+
+**Urgency**: Immediate | Next Sprint | Future
+
+### Implementation Steps
+[Outline steps to implement the changes]
+
+1. [Step 1]
+2. [Step 2]
+3. [Step 3]
+
+### Testing
+[How to test that the changes work]
+
+- [Test 1]
+- [Test 2]
+
+### Rollout
+[How to roll out the changes]
+
+- [Rollout step 1]
+- [Rollout step 2]
+
+---
+
+## Expected Benefits
+
+### Efficiency Improvements
+[How this will improve efficiency]
+
+- [Benefit 1]
+- [Benefit 2]
+
+### Quality Improvements
+[How this will improve quality]
+
+- [Benefit 1]
+- [Benefit 2]
+
+### Risk Reduction
+[How this will reduce risks]
+
+- [Benefit 1]
+- [Benefit 2]
+
+---
+
+## Risks and Considerations
+
+### Potential Risks
+[Any risks associated with the proposed changes]
+
+- [Risk 1]: [Mitigation strategy]
+- [Risk 2]: [Mitigation strategy]
+
+### Backward Compatibility
+[How this affects existing workflows]
+
+**Breaking Changes**: Yes | No
+
+**Migration Required**: Yes | No
+
+[If yes, describe migration approach]
+
+---
+
+## Additional Context
+
+### Related Issues
+[Reference any related issues or feedback]
+
+- [Related issue 1]
+- [Related issue 2]
+
+### Historical Context
+[Any relevant historical context]
+
+### Future Considerations
+[Any future considerations to keep in mind]
+
+---
+
+## Request for Node Master
+
+### Actions Requested
+[Specific actions you're requesting from Node Master]
+
+1. [Action 1]
+2. [Action 2]
+3. [Action 3]
+
+### Timeline
+**Requested Completion**: [Date or timeframe]
+
+### Follow-up
+[How you'd like to follow up on this feedback]
+
+---
+
+## Questions for Node Master
+
+[Any questions you have for Node Master]
+
+1. [Question 1]
+2. [Question 2]
+
+---
+
+Thank you for considering this feedback. I believe these changes will improve our workflow and team productivity.
+
+==============================================================================
+=== PROMPT END ===
+==============================================================================
+
+==============================================================================
+END OF TOI PROMPT
+==============================================================================

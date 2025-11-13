@@ -1,0 +1,210 @@
+==============================================================================
+TRANSFER OF INFORMATION (TOI) PROMPT
+==============================================================================
+
+FROM: Architect
+TO: Admin-[Domain]
+PURPOSE: Escalation Response
+SPRINT: [Sprint Number]
+ESCALATION: [Escalation Topic]
+
+==============================================================================
+INSTRUCTIONS FOR HUMAN
+==============================================================================
+
+This prompt provides guidance to Admin-[Domain] in response to an escalation.
+
+1. Copy the entire prompt below (between the === PROMPT START === and === PROMPT END === markers)
+2. Paste it into the existing conversation with the Admin-[Domain] node
+3. The Admin node will receive the guidance and continue working
+
+==============================================================================
+=== PROMPT START ===
+==============================================================================
+
+# Escalation Response from Architect
+
+## Escalation Reference
+
+You escalated the following issue:
+**Topic**: [Escalation Topic]
+**Date**: [Date]
+**Document**: [artifacts]/admin-[domain]/outbox/escalation-[topic].md
+
+I have reviewed your escalation and am providing guidance below.
+
+---
+
+## Analysis
+
+### Understanding of the Issue
+[Architect's understanding of the problem based on the escalation document]
+
+### Root Cause
+[Architect's analysis of the root cause]
+
+### Impact Assessment
+[Architect's assessment of the impact on the sprint and project]
+
+---
+
+## Guidance
+
+### Recommended Approach
+[Clear, specific guidance on how to proceed]
+
+**Solution**: [Specific solution to implement]
+
+**Rationale**: [Why this solution is recommended]
+
+**Implementation Steps**:
+1. [Step 1]
+2. [Step 2]
+3. [Step 3]
+
+### Technical Details
+[Any technical details needed to implement the solution]
+
+**Code Changes Required**:
+- [Change 1]
+- [Change 2]
+
+**Testing Requirements**:
+- [Test 1]
+- [Test 2]
+
+**Integration Considerations**:
+- [Consideration 1]
+- [Consideration 2]
+
+---
+
+## Updated Requirements (if applicable)
+
+[If requirements have changed, specify the updated requirements here]
+
+### Modified Acceptance Criteria
+- [Updated criterion 1]
+- [Updated criterion 2]
+
+### Modified Technical Requirements
+- [Updated requirement 1]
+- [Updated requirement 2]
+
+---
+
+## Architectural Decisions
+
+[Document any architectural decisions made in response to this escalation]
+
+### Decision: [Decision Title]
+**Context**: [Why this decision was needed]
+
+**Decision**: [What was decided]
+
+**Rationale**: [Why this decision was made]
+
+**Impact**: [How this affects the architecture]
+
+**Alternatives Considered**:
+- [Alternative 1] - [Why not chosen]
+- [Alternative 2] - [Why not chosen]
+
+---
+
+## Updated Sprint Guide (if applicable)
+
+[If the sprint guide needs to be updated, note the changes here]
+
+**Changes**:
+- [Change 1]
+- [Change 2]
+
+**Updated Sprint Guide**: [artifacts]/admin-[domain]/inbox/sprint-[N]-guide-updated.md
+
+---
+
+## Timeline Impact
+
+**Estimated Impact**: [Hours/Days]
+
+**Adjusted Timeline**: [New expected completion date if applicable]
+
+**Priority Changes**: [Any changes to feature priorities]
+
+---
+
+## Additional Guidance
+
+### Best Practices
+[Any best practices to follow for this solution]
+
+- [Practice 1]
+- [Practice 2]
+
+### Pitfalls to Avoid
+[Common mistakes to avoid]
+
+- [Pitfall 1]
+- [Pitfall 2]
+
+### Resources
+[Any helpful resources]
+
+- [Resource 1 with link]
+- [Resource 2 with link]
+
+---
+
+## Next Steps
+
+### Immediate Actions
+[What you should do immediately]
+
+1. [Action 1]
+2. [Action 2]
+3. [Action 3]
+
+### Validation
+[How to validate the solution]
+
+- [Validation step 1]
+- [Validation step 2]
+
+### Follow-up
+[Any follow-up needed]
+
+- [Follow-up item 1]
+- [Follow-up item 2]
+
+---
+
+## Questions?
+
+If you have any questions about this guidance or need further clarification:
+
+1. Review the guidance carefully
+2. Try implementing the solution
+3. If still unclear, create a follow-up escalation with specific questions
+
+---
+
+## Resuming Work
+
+You can now resume work on this feature with the guidance provided.
+
+**Remember to**:
+- Document this resolution in your session log
+- Update your implementation plan
+- Test the solution thoroughly
+- Continue with other sprint work
+
+Good luck!
+
+==============================================================================
+=== PROMPT END ===
+==============================================================================
+
+==============================================================================
+END OF TOI PROMPT
+==============================================================================
