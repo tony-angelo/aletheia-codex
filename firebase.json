@@ -18,8 +18,8 @@
         "*.local"
       ],
       "predeploy": [
-        "npm --prefix \"$RESOURCE_DIR\" run lint",
-        "npm --prefix \"$RESOURCE_DIR\" run build"
+        "npm --prefix &quot;$RESOURCE_DIR&quot; run lint",
+        "npm --prefix &quot;$RESOURCE_DIR&quot; run build"
       ]
     }
   ],
@@ -33,16 +33,8 @@
     ],
     "rewrites": [
       {
-        "source": "/api/review/**",
-        "function": "reviewapifunction"
-      },
-      {
-        "source": "/api/graph/**",
-        "function": "graphfunction"
-      },
-      {
-        "source": "/api/notes/**",
-        "function": "notesapifunction"
+        "source": "/api/**",
+        "destination": "https://aletheiacodex.app/api/:splat"
       },
       {
         "source": "**",
