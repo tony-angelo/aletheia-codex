@@ -72,13 +72,13 @@ export const reviewApi = {
     if (params.order_by) queryParams.append('order_by', params.order_by);
     if (params.descending !== undefined) queryParams.append('descending', params.descending.toString());
 
-    const endpoint = `/review/pending${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
+    const endpoint = `/pending${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
     return apiRequest(endpoint);
   },
 
   // Approve a single item (authenticated)
   approveItem: async (itemId: string) => {
-    return apiRequest('/review/approve', {
+    return apiRequest('/approve', {
       method: 'POST',
       body: JSON.stringify({ item_id: itemId }),
     });
@@ -86,7 +86,7 @@ export const reviewApi = {
 
   // Reject a single item (authenticated)
   rejectItem: async (itemId: string, reason?: string) => {
-    return apiRequest('/review/reject', {
+    return apiRequest('/reject', {
       method: 'POST',
       body: JSON.stringify({ item_id: itemId, reason }),
     });
@@ -94,7 +94,7 @@ export const reviewApi = {
 
   // Batch approve items (authenticated)
   batchApproveItems: async (itemIds: string[]) => {
-    return apiRequest('/review/batch-approve', {
+    return apiRequest('/batch-approve', {
       method: 'POST',
       body: JSON.stringify({ item_ids: itemIds }),
     });
@@ -102,7 +102,7 @@ export const reviewApi = {
 
   // Batch reject items (authenticated)
   batchRejectItems: async (itemIds: string[], reason?: string) => {
-    return apiRequest('/review/batch-reject', {
+    return apiRequest('/batch-reject', {
       method: 'POST',
       body: JSON.stringify({ item_ids: itemIds, reason }),
     });
@@ -110,7 +110,7 @@ export const reviewApi = {
 
   // Get user statistics (authenticated)
   getUserStats: async () => {
-    return apiRequest('/review/stats');
+    return apiRequest('/stats');
   },
 };
 
