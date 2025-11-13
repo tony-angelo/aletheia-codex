@@ -197,12 +197,47 @@ Sprint 1 is complete when:
 
 ---
 
+## GIT WORKFLOW
+
+**Sprint 1 Branch Setup:**
+```bash
+# Navigate to repository
+cd aletheia-codex
+
+# Checkout sprint-1 branch (already created)
+git checkout sprint-1
+
+# Pull latest changes
+git pull origin sprint-1
+```
+
+**Working on Sprint 1:**
+```bash
+# Make changes to files
+# ... edit files ...
+
+# Stage and commit changes
+git add .
+git commit -m "feat(infrastructure): descriptive commit message"
+
+# Push to sprint-1 branch
+git push origin sprint-1
+```
+
+**Branch Details:**
+- Work directly on the `sprint-1` branch
+- All Admin nodes share this branch
+- Coordinate to avoid conflicts
+- See `[artifacts]/architect/sprint-1-branch-setup.md` for details
+
+---
+
 ## NEXT STEPS
 
 1. Read your prime directive: `[artifacts]/admin-infrastructure/admin-infrastructure.txt`
 2. Read your sprint guide: `[artifacts]/admin-infrastructure/inbox/sprint-1-guide.md`
 3. Authenticate with service account
-4. Set up your sprint branch
+4. Checkout sprint-1 branch
 5. Begin implementation
 
 ---
