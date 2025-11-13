@@ -43,6 +43,52 @@ REPOSITORY REFERENCE:
 - URL: https://github.com/tony-angelo/aletheia-codex
 
 ==============================================================================
+   ==============================================================================
+   SERVICE ACCOUNT CREDENTIALS
+   ==============================================================================
+   
+   AUTHENTICATION:
+   You have access to two service account key files for GCP and Firebase operations:
+   
+   1. SUPERNINJA SERVICE ACCOUNT (Primary - Use for all deployment operations)
+      - Email: superninja@aletheia-codex-prod.iam.gserviceaccount.com
+      - Key File: [workspace]/aletheia-codex-prod-af9a64a7fcaa.json
+      - Purpose: Deployment, infrastructure management, backend operations
+      - Roles: cloudfunctions.admin, firebase.admin, datastore.user, secretmanager.admin,
+               logging.viewer, iam.serviceAccountAdmin, serviceusage.serviceUsageAdmin,
+               storage.objectUser, and more
+      
+   2. FIREBASE ADMIN SDK SERVICE ACCOUNT (Backend code only)
+      - Email: firebase-adminsdk-fbsvc@aletheia-codex-prod.iam.gserviceaccount.com
+      - Key File: [workspace]/aletheia-codex-prod-firebase-adminsdk-fbsvc-8b9046a84f.json
+      - Purpose: Firebase Admin SDK initialization in backend code
+      - Roles: firebase.sdkAdminServiceAgent, firebaseauth.admin, iam.serviceAccountTokenCreator
+   
+   USAGE GUIDELINES:
+   - Use SuperNinja account for gcloud CLI commands and deployments
+   - Use Firebase Admin SDK account for initializing Firebase Admin SDK in Python code
+   - Both accounts have sufficient permissions for all Sprint 1 tasks
+   - See [artifacts]/architect/service-account-analysis.md for detailed permission analysis
+   
+   AUTHENTICATION COMMANDS:
+   # Authenticate gcloud CLI (use for deployments)
+   gcloud auth activate-service-account --key-file=[workspace]/aletheia-codex-prod-af9a64a7fcaa.json
+   
+   # Set environment variable (alternative method)
+   export GOOGLE_APPLICATION_CREDENTIALS="[workspace]/aletheia-codex-prod-af9a64a7fcaa.json"
+   
+   FIREBASE ADMIN SDK INITIALIZATION (in Python code):
+   import firebase_admin
+   from firebase_admin import credentials
+   
+   cred = credentials.Certificate('[workspace]/aletheia-codex-prod-firebase-adminsdk-fbsvc-8b9046a84f.json')
+   firebase_admin.initialize_app(cred)
+   
+   PERMISSION VERIFICATION:
+   - If you encounter permission errors, check [artifacts]/architect/service-account-analysis.md
+   - Report any permission gaps to Architect via escalation workflow
+   - DO NOT proceed if you lack required permissions - escalate immediately
+   
 CORE RESPONSIBILITIES
 ==============================================================================
 

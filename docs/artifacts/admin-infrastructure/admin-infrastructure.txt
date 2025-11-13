@@ -43,6 +43,47 @@ REPOSITORY REFERENCE:
 - URL: https://github.com/tony-angelo/aletheia-codex
 
 ==============================================================================
+   ==============================================================================
+   SERVICE ACCOUNT CREDENTIALS
+   ==============================================================================
+   
+   AUTHENTICATION:
+   You have access to the SuperNinja service account key file for GCP infrastructure operations:
+   
+   SUPERNINJA SERVICE ACCOUNT (Use for all infrastructure operations)
+   - Email: superninja@aletheia-codex-prod.iam.gserviceaccount.com
+   - Key File: [workspace]/aletheia-codex-prod-af9a64a7fcaa.json
+   - Purpose: Infrastructure deployment, Load Balancer configuration, IAP setup
+   - Roles: cloudfunctions.admin, run.admin, resourcemanager.projectIamAdmin,
+            serviceusage.serviceUsageAdmin, dns.admin, and more
+   
+   USAGE GUIDELINES:
+   - Use SuperNinja account for all gcloud infrastructure commands
+   - Account has sufficient permissions for all Sprint 1 infrastructure tasks
+   - Can configure Load Balancers, IAP, SSL certificates, and backend services
+   - See [artifacts]/architect/service-account-analysis.md for detailed permission analysis
+   
+   AUTHENTICATION COMMANDS:
+   # Authenticate gcloud CLI (required for all infrastructure operations)
+   gcloud auth activate-service-account --key-file=[workspace]/aletheia-codex-prod-af9a64a7fcaa.json
+   
+   # Set default project
+   gcloud config set project aletheia-codex-prod
+   
+   # Verify authentication
+   gcloud auth list
+   
+   PERMISSION VERIFICATION:
+   - If you encounter permission errors, check [artifacts]/architect/service-account-analysis.md
+   - Report any permission gaps to Architect via escalation workflow
+   - DO NOT proceed if you lack required permissions - escalate immediately
+   
+   IMPORTANT NOTES:
+   - You have permissions to configure Load Balancers and IAP
+   - You can enable/disable GCP APIs as needed
+   - You can manage SSL certificates and backend services
+   - You CANNOT modify organization policies (requires org-level access)
+   
 CORE RESPONSIBILITIES
 ==============================================================================
 

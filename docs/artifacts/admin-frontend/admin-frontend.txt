@@ -43,6 +43,40 @@ REPOSITORY REFERENCE:
 - URL: https://github.com/tony-angelo/aletheia-codex
 
 ==============================================================================
+   ==============================================================================
+   SERVICE ACCOUNT CREDENTIALS
+   ==============================================================================
+   
+   AUTHENTICATION:
+   You have access to the SuperNinja service account key file for GCP and Firebase operations:
+   
+   SUPERNINJA SERVICE ACCOUNT (Use for all deployment operations)
+   - Email: superninja@aletheia-codex-prod.iam.gserviceaccount.com
+   - Key File: [workspace]/aletheia-codex-prod-af9a64a7fcaa.json
+   - Purpose: Deployment, Firebase Hosting, Cloud Storage operations
+   - Roles: firebase.admin, storage.objectUser, logging.viewer, and more
+   
+   USAGE GUIDELINES:
+   - Use SuperNinja account for Firebase CLI commands and deployments
+   - Account has sufficient permissions for all Sprint 1 frontend tasks
+   - See [artifacts]/architect/service-account-analysis.md for detailed permission analysis
+   
+   AUTHENTICATION COMMANDS:
+   # Authenticate gcloud CLI
+   gcloud auth activate-service-account --key-file=[workspace]/aletheia-codex-prod-af9a64a7fcaa.json
+   
+   # Authenticate Firebase CLI
+   export GOOGLE_APPLICATION_CREDENTIALS="[workspace]/aletheia-codex-prod-af9a64a7fcaa.json"
+   firebase login:ci --no-localhost
+   
+   # Or use the service account directly with Firebase
+   firebase deploy --token $(gcloud auth print-access-token)
+   
+   PERMISSION VERIFICATION:
+   - If you encounter permission errors, check [artifacts]/architect/service-account-analysis.md
+   - Report any permission gaps to Architect via escalation workflow
+   - DO NOT proceed if you lack required permissions - escalate immediately
+   
 CORE RESPONSIBILITIES
 ==============================================================================
 

@@ -29,6 +29,65 @@ This is a critical fix sprint. The application has been developed through Sprint
 
 **Current Blocker**: Frontend cannot access backend due to 403 errors
 
+
+---
+
+## Service Account Credentials
+
+**CRITICAL: You have been provided with service account keys for authentication.**
+
+### Available Service Accounts
+
+1. **SuperNinja Service Account** (Primary - Use for all deployment operations)
+   - Email: `superninja@aletheia-codex-prod.iam.gserviceaccount.com`
+   - Key File: `[workspace]/aletheia-codex-prod-af9a64a7fcaa.json`
+   - Purpose: Deployment, infrastructure management, backend operations
+   - Permissions: Full access to deploy, configure, and manage GCP resources
+
+2. **Firebase Admin SDK Service Account** (Backend code only)
+   - Email: `firebase-adminsdk-fbsvc@aletheia-codex-prod.iam.gserviceaccount.com`
+   - Key File: `[workspace]/aletheia-codex-prod-firebase-adminsdk-fbsvc-8b9046a84f.json`
+   - Purpose: Firebase Admin SDK initialization in backend code
+   - Permissions: Firebase Auth and Admin SDK operations
+
+### Authentication Instructions
+
+**For gcloud CLI (Infrastructure and Backend deployments):**
+```bash
+gcloud auth activate-service-account --key-file=[workspace]/aletheia-codex-prod-af9a64a7fcaa.json
+gcloud config set project aletheia-codex-prod
+```
+
+**For Firebase CLI (Frontend deployments):**
+```bash
+export GOOGLE_APPLICATION_CREDENTIALS="[workspace]/aletheia-codex-prod-af9a64a7fcaa.json"
+```
+
+**For Firebase Admin SDK in Python code:**
+```python
+import firebase_admin
+from firebase_admin import credentials
+
+cred = credentials.Certificate('[workspace]/aletheia-codex-prod-firebase-adminsdk-fbsvc-8b9046a84f.json')
+firebase_admin.initialize_app(cred)
+```
+
+### Permission Verification
+
+- **Complete permission analysis:** See `[artifacts]/architect/service-account-analysis.md`
+- **All Sprint 1 permissions verified:** ✅ Sufficient for all tasks
+- **If you encounter permission errors:** Escalate immediately to Architect
+- **NEVER commit service account keys to the repository**
+
+### Test-in-Prod Approach
+
+You are **encouraged to deploy and test directly in production** for this sprint:
+- You have full deployment permissions
+- The application is currently non-functional, so there's no risk of breaking working features
+- Deploy incrementally and test each component
+- Monitor logs and metrics after each deployment
+- Roll back if issues are detected
+
 ---
 
 ## Features by Domain
