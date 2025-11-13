@@ -56,12 +56,22 @@ gcloud auth list
 ### Step 2: Checkout Sprint Branch
 
 ```bash
-# Checkout sprint-1 branch
+# Checkout sprint-1 branch (shared by all Admin nodes)
 git checkout sprint-1
 
-# Pull latest changes
+# Pull latest changes (includes Admin-Infrastructure's work)
 git pull origin sprint-1
+
+# Verify you can see infrastructure work
+ls infrastructure/load-balancer/
+ls infrastructure/monitoring/
 ```
+
+**Important**: All Admin nodes work on the same `sprint-1` branch. This means:
+- ✅ You can see Admin-Infrastructure's Load Balancer configuration
+- ✅ You can reference their scripts and documentation
+- ✅ Your changes will be visible to Admin-Frontend
+- ⚠️ Coordinate with other nodes to avoid conflicts
 
 ---
 
@@ -200,8 +210,9 @@ Your Sprint 1 guide contains:
    - Contains: Complete infrastructure status, what's ready, what you need to do
 
 3. **Infrastructure Documentation** (Reference)
-   - Location: `[sprint-1-infrastructure]/infrastructure/load-balancer/README.md`
+   - Location: `[sprint-1]/infrastructure/load-balancer/README.md`
    - Contains: Complete Load Balancer configuration details
+   - **Note**: Admin-Infrastructure's work is now on the `sprint-1` branch
 
 ### Your Documentation
 
@@ -335,9 +346,13 @@ git push origin sprint-1
 ```
 
 ### Branch Details
-- Work directly on the `sprint-1` branch
-- All Admin nodes share this branch
-- Coordinate to avoid conflicts
+- **Shared Branch**: All Admin nodes work on `sprint-1`
+- **Admin-Infrastructure's work**: Already merged into `sprint-1`
+- **Coordination**: Communicate with other nodes to avoid conflicts
+- **File Organization**: 
+  - Infrastructure: `infrastructure/` directory
+  - Backend: `functions/` and `shared/` directories
+  - Frontend: `web/` directory
 - See `[artifacts]/architect/sprint-1-branch-setup.md` for details
 
 ---
