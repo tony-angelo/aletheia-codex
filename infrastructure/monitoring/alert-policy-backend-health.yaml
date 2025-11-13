@@ -1,0 +1,20 @@
+displayName: "Backend Service Unhealthy"
+documentation:
+  content: "One or more backend services are returning 5xx errors. Check Cloud Functions status and logs."
+  mimeType: "text/markdown"
+conditions:
+  - displayName: "Backend 5xx errors detected"
+    conditionThreshold:
+      filter: 'resource.type="https_lb_rule" AND metric.type="loadbalancing.googleapis.com/https/backend_request_count" AND metric.labels.response_code_class="500"'
+      aggregations:
+        - alignmentPeriod: "60s"
+          perSeriesAligner: "ALIGN_RATE"
+          crossSeriesReducer: "REDUCE_SUM"
+          groupByFields:
+            - "resource.url_map_name"
+            - "metric.backend_target_name"
+      comparison: "COMPARISON_GT"
+      thresholdValue: 1
+      duration: "300s"
+combiner: "OR"
+enabled: true
