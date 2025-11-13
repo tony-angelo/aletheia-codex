@@ -1,0 +1,19 @@
+displayName: "SSL Certificate Issues"
+documentation:
+  content: "SSL/TLS handshake failures detected. This may indicate certificate problems, expiration, or configuration issues. Verify certificate status in Load Balancer settings."
+  mimeType: "text/markdown"
+conditions:
+  - displayName: "SSL handshake failures detected"
+    conditionThreshold:
+      filter: 'resource.type="https_lb_rule" AND metric.type="loadbalancing.googleapis.com/https/request_count" AND metric.labels.response_code_class="400"'
+      aggregations:
+        - alignmentPeriod: "300s"
+          perSeriesAligner: "ALIGN_RATE"
+          crossSeriesReducer: "REDUCE_SUM"
+          groupByFields:
+            - "resource.url_map_name"
+      comparison: "COMPARISON_GT"
+      thresholdValue: 5
+      duration: "300s"
+combiner: "OR"
+enabled: true

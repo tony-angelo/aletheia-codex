@@ -1,0 +1,30 @@
+defaultService: https://www.googleapis.com/compute/v1/projects/aletheia-codex-prod/global/backendServices/backend-orchestration
+hostRules:
+- hosts:
+  - '*'
+  pathMatcher: api-matcher
+name: aletheia-lb-url-map
+pathMatchers:
+- defaultService: https://www.googleapis.com/compute/v1/projects/aletheia-codex-prod/global/backendServices/backend-orchestration
+  name: api-matcher
+  pathRules:
+  - paths:
+    - /api/ingest
+    - /api/ingest/*
+    service: https://www.googleapis.com/compute/v1/projects/aletheia-codex-prod/global/backendServices/backend-ingestion
+  - paths:
+    - /api/orchestrate
+    - /api/orchestrate/*
+    service: https://www.googleapis.com/compute/v1/projects/aletheia-codex-prod/global/backendServices/backend-orchestration
+  - paths:
+    - /api/graph
+    - /api/graph/*
+    service: https://www.googleapis.com/compute/v1/projects/aletheia-codex-prod/global/backendServices/backend-graphfunction
+  - paths:
+    - /api/notes
+    - /api/notes/*
+    service: https://www.googleapis.com/compute/v1/projects/aletheia-codex-prod/global/backendServices/backend-notesapifunction
+  - paths:
+    - /api/review
+    - /api/review/*
+    service: https://www.googleapis.com/compute/v1/projects/aletheia-codex-prod/global/backendServices/backend-reviewapifunction

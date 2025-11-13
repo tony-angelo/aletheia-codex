@@ -1,0 +1,19 @@
+displayName: "IAP Authentication Failures"
+documentation:
+  content: "Multiple IAP authentication failures detected (401 responses). This may indicate configuration issues or unauthorized access attempts."
+  mimeType: "text/markdown"
+conditions:
+  - displayName: "401 responses > 10 per minute"
+    conditionThreshold:
+      filter: 'resource.type="https_lb_rule" AND metric.type="loadbalancing.googleapis.com/https/request_count" AND metric.labels.response_code="401"'
+      aggregations:
+        - alignmentPeriod: "60s"
+          perSeriesAligner: "ALIGN_RATE"
+          crossSeriesReducer: "REDUCE_SUM"
+          groupByFields:
+            - "resource.url_map_name"
+      comparison: "COMPARISON_GT"
+      thresholdValue: 10
+      duration: "60s"
+combiner: "OR"
+enabled: true
