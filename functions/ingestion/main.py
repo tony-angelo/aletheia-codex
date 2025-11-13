@@ -1,6 +1,8 @@
 ﻿"""
-AletheiaCodex - Ingestion Function
+AletheiaCodex - Ingestion Function (with Unified Authentication)
 Accepts document uploads and queues them for processing.
+
+SPRINT 1: Updated to use unified authentication (IAP + Firebase)
 """
 
 import functions_framework
@@ -10,6 +12,7 @@ import sys
 import os
 
 # Import shared modules
+from shared.auth.unified_auth import require_auth
 from shared.db.firestore_client import get_firestore_client
 from shared.utils.logging import get_logger
 
@@ -20,6 +23,7 @@ BUCKET_NAME = f"{PROJECT_ID}-documents"
 
 
 @functions_framework.http
+@require_auth
 def ingest_document(request: Request):
     """
     HTTP endpoint to ingest a new document.

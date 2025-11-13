@@ -1,8 +1,8 @@
 """
-Graph API Cloud Function for AletheiaCodex (with Firebase Authentication).
+Graph API Cloud Function for AletheiaCodex (with Unified Authentication).
 Provides HTTP endpoints for browsing the knowledge graph.
 
-SPRINT 6: Knowledge Graph API with proper authentication and CORS
+SPRINT 1: Updated to use unified authentication (IAP + Firebase)
 """
 
 import functions_framework
@@ -13,7 +13,7 @@ import sys
 # Add shared directory to path
 sys.path.append('/workspace')
 
-from shared.auth.firebase_auth import require_auth
+from shared.auth.unified_auth import require_auth
 from shared.db.neo4j_client import execute_query
 from shared.utils.logging import get_logger
 

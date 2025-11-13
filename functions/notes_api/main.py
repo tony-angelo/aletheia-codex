@@ -1,8 +1,8 @@
 """
-AletheiaCodex - Notes API Function (with Firebase Authentication)
+AletheiaCodex - Notes API Function (with Unified Authentication)
 Handles note operations: create, list, delete, and process notes.
 
-SPRINT 6: Updated to use shared Firebase authentication middleware
+SPRINT 1: Updated to use unified authentication (IAP + Firebase)
 Provides REST API for note management and processing.
 """
 
@@ -17,7 +17,7 @@ from datetime import datetime
 # Add shared directory to path
 sys.path.append('/workspace')
 
-from shared.auth.firebase_auth import require_auth
+from shared.auth.unified_auth import require_auth
 from shared.utils.logging import get_logger
 
 logger = get_logger(__name__)
