@@ -77,12 +77,10 @@ cd ~
 
 # Create policy file with placeholder
 cat > policy-drs-re-enable.yaml << 'EOF'
-name: organizations/1037037147281/policies/iam.allowedPolicyMemberDomains
-spec:
-  rules:
-  - values:
-      allowedValues:
-      - REPLACE_WITH_CUSTOMER_ID
+constraint: constraints/iam.allowedPolicyMemberDomains
+listPolicy:
+  allowedValues:
+  - REPLACE_WITH_CUSTOMER_ID
 EOF
 
 # Display the file to verify
@@ -91,12 +89,10 @@ cat policy-drs-re-enable.yaml
 
 **Expected Output:**
 ```yaml
-name: organizations/1037037147281/policies/iam.allowedPolicyMemberDomains
-spec:
-  rules:
-  - values:
-      allowedValues:
-      - REPLACE_WITH_CUSTOMER_ID
+constraint: constraints/iam.allowedPolicyMemberDomains
+listPolicy:
+  allowedValues:
+  - REPLACE_WITH_CUSTOMER_ID
 ```
 
 ---
@@ -117,12 +113,10 @@ cat policy-drs-re-enable.yaml
 
 **Expected Output:**
 ```yaml
-name: organizations/1037037147281/policies/iam.allowedPolicyMemberDomains
-spec:
-  rules:
-  - values:
-      allowedValues:
-      - C03qt98jf  # Your actual Customer ID
+constraint: constraints/iam.allowedPolicyMemberDomains
+listPolicy:
+  allowedValues:
+  - C03qt98jf  # Your actual Customer ID
 ```
 
 **Verification Checklist:**
