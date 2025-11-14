@@ -141,7 +141,8 @@ spec:
 **Execute in Cloud Shell:**
 ```bash
 # Apply the policy at organization level
-gcloud resource-manager org-policies set-policy policy-drs-re-enable.yaml
+gcloud resource-manager org-policies set-policy policy-drs-re-enable.yaml \
+  --organization=1037037147281
 
 # Wait for confirmation message
 ```
