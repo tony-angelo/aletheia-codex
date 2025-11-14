@@ -41,6 +41,30 @@
         }
       },
       {
+        "source": "/api/graph/**",
+        "run": {
+          "serviceId": "graph-api",
+          "region": "us-central1",
+          "invoker": "firebase-invoker@aletheia-codex-prod.iam.gserviceaccount.com"
+        }
+      },
+      {
+        "source": "/api/notes/**",
+        "run": {
+          "serviceId": "notes-api",
+          "region": "us-central1",
+          "invoker": "firebase-invoker@aletheia-codex-prod.iam.gserviceaccount.com"
+        }
+      },
+      {
+        "source": "/api/orchestration/**",
+        "run": {
+          "serviceId": "orchestration-api",
+          "region": "us-central1",
+          "invoker": "firebase-invoker@aletheia-codex-prod.iam.gserviceaccount.com"
+        }
+      },
+      {
         "source": "**",
         "destination": "/index.html"
       }
