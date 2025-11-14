@@ -3,7 +3,7 @@ import { db } from '../firebase/config';
 
 export interface Note {
   id: string;
-  user_id: string;
+  userId: string;
   content: string;
   createdAt: Timestamp;
   updatedAt: Timestamp;
@@ -52,7 +52,7 @@ class NotesService {
   async createNote(request: CreateNoteRequest): Promise<Note> {
     const now = Timestamp.now();
     const noteData = {
-      user_id: request.userId,
+      userId: request.userId,
       content: request.content,
       createdAt: now,
       updatedAt: now,
@@ -83,7 +83,7 @@ class NotesService {
       orderDirection?: 'asc' | 'desc';
     }
   ): Promise<Note[]> {
-    const constraints: any[] = [where('user_id', '==', userId)];
+    const constraints: any[] = [where('userId', '==', userId)];
     
     if (options?.status) {
       constraints.push(where('status', '==', options.status));
@@ -155,7 +155,7 @@ class NotesService {
       orderDirection?: 'asc' | 'desc';
     }
   ): () => void {
-    const constraints: any[] = [where('user_id', '==', userId)];
+    const constraints: any[] = [where('userId', '==', userId)];
     
     if (options?.status) {
       constraints.push(where('status', '==', options.status));
