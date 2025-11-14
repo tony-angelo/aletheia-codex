@@ -35,14 +35,14 @@ const DashboardPage: React.FC = () => {
       // Get total notes
       const notesQuery = query(
         collection(db, 'notes'),
-        where('userId', '==', user.uid)
+        where('user_id', '==', user.uid)
       );
       const notesSnapshot = await getDocs(notesQuery);
 
       // Get recent notes
       const recentQuery = query(
         collection(db, 'notes'),
-        where('userId', '==', user.uid),
+        where('user_id', '==', user.uid),
         orderBy('createdAt', 'desc'),
         limit(5)
       );
@@ -50,8 +50,8 @@ const DashboardPage: React.FC = () => {
 
       // Get review queue items
       const reviewQuery = query(
-        collection(db, 'reviewQueue'),
-        where('userId', '==', user.uid)
+        collection(db, 'review_queue'),
+        where('user_id', '==', user.uid)
       );
       const reviewSnapshot = await getDocs(reviewQuery);
 
