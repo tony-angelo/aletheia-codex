@@ -1,7 +1,7 @@
 # Review API Cloud Functions Requirements
 
-# Core Framework
-functions-framework==3.8.1
+# Core Framework (pinned for Python 3.11 compatibility)
+functions-framework==3.5.0
 flask==3.0.0
 
 # Google Cloud Libraries
