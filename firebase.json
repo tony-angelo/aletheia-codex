@@ -34,15 +34,11 @@
     "rewrites": [
       {
         "source": "/api/review/**",
-        "function": "reviewapifunction"
-      },
-      {
-        "source": "/api/graph/**",
-        "function": "graphfunction"
-      },
-      {
-        "source": "/api/notes/**",
-        "function": "notesapifunction"
+        "run": {
+          "serviceId": "review-api",
+          "region": "us-central1",
+          "invoker": "firebase-invoker@aletheia-codex-prod.iam.gserviceaccount.com"
+        }
       },
       {
         "source": "**",
