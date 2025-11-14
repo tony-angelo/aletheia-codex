@@ -56,8 +56,8 @@ def verify_firebase_token(id_token: str) -> dict:
     _initialize_firebase()
     
     try:
-        # Verify the token
-        decoded_token = auth.verify_id_token(id_token)
+        # Verify the token - don't check revoked status to be less strict
+        decoded_token = auth.verify_id_token(id_token, check_revoked=False)
         logger.info(f"Token verified for user: {decoded_token.get('uid')}")
         return decoded_token
     except auth.InvalidIdTokenError as e:
