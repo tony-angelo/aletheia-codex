@@ -21,7 +21,7 @@ from datetime import datetime
 # Add shared directory to path (local to this function)
 sys.path.insert(0, os.path.dirname(__file__))
 
-from shared.auth.unified_auth import require_auth
+from shared.auth.firebase_auth import require_auth
 from shared.review.queue_manager import create_queue_manager
 from shared.review.approval_workflow import create_approval_workflow
 from shared.review.batch_processor import create_batch_processor
