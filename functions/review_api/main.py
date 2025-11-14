@@ -125,17 +125,17 @@ def handle_request(request: Request) -> flask.Response:
         
         # Route to appropriate handler
         # Handle both full path (direct call) and stripped path (Firebase Hosting rewrite)
-        if (path == 'review/pending' or path == 'pending') and request.method == 'GET':
+        if (path == 'api/review/pending' or path == 'review/pending' or path == 'pending') and request.method == 'GET':
             return handle_get_pending_items(request, user_id, origin)
-        elif (path == 'review/approve' or path == 'approve') and request.method == 'POST':
+        elif (path == 'api/review/approve' or path == 'review/approve' or path == 'approve') and request.method == 'POST':
             return handle_approve_item(request, user_id, origin)
-        elif (path == 'review/reject' or path == 'reject') and request.method == 'POST':
+        elif (path == 'api/review/reject' or path == 'review/reject' or path == 'reject') and request.method == 'POST':
             return handle_reject_item(request, user_id, origin)
-        elif (path == 'review/batch-approve' or path == 'batch-approve') and request.method == 'POST':
+        elif (path == 'api/review/batch-approve' or path == 'review/batch-approve' or path == 'batch-approve') and request.method == 'POST':
             return handle_batch_approve_items(request, user_id, origin)
-        elif (path == 'review/batch-reject' or path == 'batch-reject') and request.method == 'POST':
+        elif (path == 'api/review/batch-reject' or path == 'review/batch-reject' or path == 'batch-reject') and request.method == 'POST':
             return handle_batch_reject_items(request, user_id, origin)
-        elif (path == 'review/stats' or path == 'stats') and request.method == 'GET':
+        elif (path == 'api/review/stats' or path == 'review/stats' or path == 'stats') and request.method == 'GET':
             return handle_get_user_stats(request, user_id, origin)
         else:
             return cors_response({
