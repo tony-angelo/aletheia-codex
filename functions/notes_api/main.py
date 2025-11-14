@@ -14,10 +14,10 @@ import sys
 from typing import Dict, Any
 from datetime import datetime
 
-# Add shared directory to path
-sys.path.append('/workspace')
+# Add shared directory to path (local to this function)
+sys.path.insert(0, os.path.dirname(__file__))
 
-from shared.auth.unified_auth import require_auth
+from shared.auth.firebase_auth import require_auth
 from shared.utils.logging import get_logger
 
 logger = get_logger(__name__)

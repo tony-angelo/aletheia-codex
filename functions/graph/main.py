@@ -10,10 +10,10 @@ from flask import Request, jsonify
 import os
 import sys
 
-# Add shared directory to path
-sys.path.append('/workspace')
+# Add shared directory to path (local to this function)
+sys.path.insert(0, os.path.dirname(__file__))
 
-from shared.auth.unified_auth import require_auth
+from shared.auth.firebase_auth import require_auth
 from shared.db.neo4j_client import execute_query
 from shared.utils.logging import get_logger
 

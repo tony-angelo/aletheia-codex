@@ -12,11 +12,15 @@ import functions_framework
 from google.cloud import firestore
 from firebase_admin import initialize_app
 import os
+import sys
 import json
 import time
 from typing import Optional, List, Dict, Any
 import asyncio
 from cloudevents.http import CloudEvent
+
+# Add shared directory to path (local to this function)
+sys.path.insert(0, os.path.dirname(__file__))
 
 # Initialize Firebase Admin
 try:
